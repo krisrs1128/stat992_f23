@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Binding data | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Binding data</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>A first look at visual encoding in D3</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week4/week4-4">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week+4+-+4A+Binding+data/1_10r7ssbu">Recording</a></p>
+
+<ol>
+  <li>
+    <p>If we only had D3 selections, we would be able to do a fair bit of HTML
+manipulation, but it would be tedious to work with datasets, because we would
+have to manually append the elements one by one. Fortunately, D3 allows us to
+“bind” data to selections. We will explore this concept in much more detail next
+week, but for now, let’s see how this allows us to scale the <code class="language-plaintext highlighter-rouge">append</code> and
+<code class="language-plaintext highlighter-rouge">attrs</code>-guided modifications to larger datasets.</p>
+  </li>
+  <li>We’ll create a simulated dataset of 100 random two-dimensional uniform
+numbers using a map. Each element in the length 100 array is an object with two
+keys, “x” and “y”, giving the the location for the point in pixel coordinates.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let ix = d3.range(100)
+let generator = d3.randomUniform(0, 500)
+let u = ix.map(_ =&gt;{ return {x: generator(), y: generator(), r: 0.01 * generator()} })
+</code></pre></div>    </div>
+  </li>
+  <li>We then bind the dataset <code class="language-plaintext highlighter-rouge">u</code> to a group called “scatter.”
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#scatter")
+ .selectAll("circle")
+ .data(u).enter()
+ .append("circle")	  
+ .attrs({
+   cx: d =&gt; d.x,
+   cy: d =&gt; d.y,
+   r: d =&gt; d.r
+ })
+</code></pre></div>    </div>
+    <p>The result looks like this,</p>
+  </li>
+</ol>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-4/scatter.html" width="800"></iframe>
+
+<ol>
+  <li>
+    <p>Let’s consider the code line-by-line. We first create a selection on the
+“scatter” group element <code class="language-plaintext highlighter-rouge">&lt;g id="scatter"/&gt;</code>, which was originally defined on the
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week4/week4-4/scatter.html">HTML
+page</a>.
+Next is a counterintuitive part — we define a selection of circles, even though
+there are none on the page! We have to do this to anticipate the tags that will
+be created in the data bind, which happens in the next line using <code class="language-plaintext highlighter-rouge">.data(u)</code>.</p>
+  </li>
+  <li>
+    <p>The <code class="language-plaintext highlighter-rouge">.enter()</code> call calculates the difference between the current circle
+selection (which sees no relevant tags) and the array we’ve attached (which has
+100 elements). The difference (0 vs. 100) means that when we call
+<code class="language-plaintext highlighter-rouge">.append("circle")</code> in the next line, we append 100 circles.  But at the start,
+these circles have no attributes, and they would be invisible on the webpage if
+we stopped our code here.</p>
+  </li>
+  <li>
+    <p>To modify their appearance, we use <code class="language-plaintext highlighter-rouge">attrs()</code>. Before, we always set the
+attributes manually. Now that we have data, we can set attributes by referring
+to their values — this just the concept of visual encoding, but in D3 instead of
+ggplot2.</p>
+  </li>
+  <li>
+    <p>The process is similar to what the <code class="language-plaintext highlighter-rouge">aes()</code> command does. We take an
+attributes of the mark that we want to specify, like the <code class="language-plaintext highlighter-rouge">cx</code> x-coordinates of
+the circles mark we’ve appended, and have it depend on a property of the array
+elements via small functions. Specifically, <code class="language-plaintext highlighter-rouge">cx: d =&gt; d.x</code> is saying to set the
+<code class="language-plaintext highlighter-rouge">cx</code> attribute of each circle by filling it with the value of <code class="language-plaintext highlighter-rouge">d.x</code> in the
+associated bound array element.</p>
+  </li>
+  <li>
+    <p>We can also modify many elements that have been bound to data. The example
+below has the radii of the circles expand and contract periodically. It
+accomplishes this by continually updating the <code class="language-plaintext highlighter-rouge">rnew</code> property in <code class="language-plaintext highlighter-rouge">u</code>, rebinding
+the data, and updating the attributes. We call the <code class="language-plaintext highlighter-rouge">animate</code> function
+recursively, but adding a .1 second between calls, so that the animation moves
+smoothly.</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> // animate the radii of the circles
+ function animate(t) {
+   u = u.map(d =&gt; { return {x: d.x, y: d.y, r: d.r, rnew: (1 + Math.sin(t/10)) * d.r }})
+   d3.selectAll("circle")
+ 	.data(u)
+ 	.attr("r", d =&gt; d.rnew)
+
+   d3.timeout(() =&gt; { animate(t + 1) }, 100)
+ }
+
+ animate(0);
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-4/scatter-animate.html" width="900"></iframe>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

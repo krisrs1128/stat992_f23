@@ -1,0 +1,38 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(embed)
+library(tidymodels)
+```
+
+```{r}
+pbmc <- read_csv("https://uwmadison.box.com/shared/static/ai539s30rjsw5ke4vxbjrxjaiihq7edk.csv")
+```
+
+a. Define a tidymodels `recipe` that specifies that UMAP should be performed
+with the parameters `learn_rate = 0.1` and `neighbors = 5`. There is no need to
+normalize these data, as they have been normalized in advance using methods
+tailored to single-cell genomics data.
+
+```{r}
+umap_rec <- recipe(~ ., data = pbmc) %>%
+  update_role(cell_tag, new_role = "id") %>%
+  step_umap(all_predictors(), neighbors = 5, min_dist = 0.1)
+
+embeddings <- umap_rec %>%
+  prep() %>%
+  juice()
+
+embeddings %>%
+  left_join(pbmc) %>%
+  write_csv("scores.csv")
+```

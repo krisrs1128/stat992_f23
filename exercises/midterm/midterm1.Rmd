@@ -1,0 +1,349 @@
+---
+title: "STAT 679 / 992 Midterm"
+geometry: margin=2cm
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(knitr)
+library(tidyverse)
+opts_chunk$set(cache = TRUE, message = FALSE, warning = FALSE, echo = TRUE, include = TRUE)
+options(width = 200)
+th <- theme_minimal() + 
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "#f7f7f7"),
+    panel.border = element_rect(fill = NA, color = "#0c0c0c", size = 0.6),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
+    legend.position = "bottom"
+  )
+theme_set(th)
+```
+
+* This exam lasts from 11:00 - 12:15pm on October 24, 2022. There are 7
+questions.
+* This exam is closed notes and closed computer.
+* You may use a 1-page cheat sheet (8.5 x 11in or A4 size). You may use both
+sides, but the cheat sheet must be handwritten.
+* If you need extra space, you may write on the back of the page. Please
+indicate somewhere that your answer continues.
+* The instructors will only be able to answer clarifying questions during the
+exam. They will be sitting at the back of the room.
+
+| Question | Q1 | Q2 | Q3 | Q4 | Q5 | Q6 | Q7 | Total |
+| ---- | -- | -- | -- | -- | -- | -- | -- | -- |
+| Score |  |  |  |  |  |  |  |  | |
+| Possible | 2 | 2 | 4 | 5 | 5 | 6 | 6 | 30 |
+
+
+### Q1
+
+Circle whether the following statements about interactive visualization with
+Shiny are TRUE or FALSE.
+
+  a. TRUE FALSE The `bs_theme()` function from the `bslib` library can be used
+  to both customize the overall UI theme and modify fonts in a Shiny
+  application.
+  
+  b. TRUE FALSE In order to implement a brush graphical query that only moves in the `x`
+  direction, a version of the following code will have to appear at some point
+  within the application's server function,
+  
+        ```{r, eval = FALSE}
+        plotOutput("output_id", brush = brushOpts("plot_brush", direction = "x")))
+        ```
+    
+  c. TRUE FALSE By using a `reactive({...})` expression within a server function, it is
+  possible to reduce the number of edges appearing in an application's reactive
+  graph.
+  
+  d. TRUE FALSE If the code 
+  
+        ```{r, eval = FALSE}
+        output$scatterplot <- renderPlot({
+          ggplot(filter(df, group %in% input$groups)) +
+            geom_point(aes(x, y))
+        })
+        ```
+  
+     appeared in an application's server, then we would expect to see
+     `plotOutput(input$scatterplot)` in the UI.
+  
+### Q2
+
+Circle whether the following statements about interactive visualization with
+Shiny are TRUE or FALSE.
+
+  a. TRUE FALSE Imagine that we want to highlight a subset of circles that have
+  been given the class name "highlighted." The code below could be used to
+  increase the radius of all circles within this class to 5 pixels.
+  
+        ```{r, eval = FALSE}
+        d3.selectAll("#highlighted")
+          .attr("r", 5)
+        ```
+    
+  b. TRUE FALSE Imagine that `circle_data` is an array of objects giving x and y
+  coordinates in fields called `x` and `y`. The code below will append one
+  circle for each object in the array at the `x` and `y` pixel coordinates of
+  the SVG.
+  
+        ```{r, eval = FALSE}
+        d3.data(circle_data).enter()
+          .append("circle")
+          .attrs({
+            cx: d => d.x,
+            cy: d => d.y,
+            r: 5
+          })
+        ```
+  
+  c. TRUE FALSE Imagine that our visualization of the `circle_data` array currently
+  displays 10 circles arranged from left to right. The code below will reduce
+  the size of the three circles furthest to the right before completely removing
+  their corresponding HTML tags from the page.
+  
+        ```{r, eval = FALSE}
+        circles = circles.slice(3)
+        d3.select("svg")
+          .selectAll("circle")
+          .data(circle_data).exit()
+          .transition()
+          .duration(4000)
+          .attr("r", 0)
+          .remove()
+        ```
+  
+  d. TRUE FALSE ID functions can be supplied to the second of argument a `.data()` call in
+  order to associate each appended HTML element with a property appearing in the
+  underlying array element.
+
+### Q3
+
+The example visualization below comes from the course notes. It is supposed to
+help readers compare country populations.
+
+```{r, out.width = 200, fig.align = "center"}
+library(tidyverse)
+gapminder <- read_csv("https://uwmadison.box.com/shared/static/dyz0qohqvgake2ghm4ngupbltkzpqb7t.csv", col_types = cols()) %>% 
+  mutate(cluster = as.factor(cluster))
+
+print(head(gapminder, 3))
+ggplot(filter(gapminder, year == 2000)) +
+ geom_col(aes(country, pop))
+```
+
+
+  a. (2 points) Give two distinct examples of specific user queries related to
+  the overall `gapminder` dataset printed above that are difficult (or
+  impossible) to make with the current display.
+      
+      $$\\[2.5cm]$$
+      
+  b. (2 points) Sketch an alternative `ggplot2` implementation that addresses the issues
+  you raised in part (a). Why does it help?
+  
+      $$\\[2.5cm]$$
+  
+### Q4
+
+This problem asks you to share your conceptual and practical understanding of D3
+scales.
+
+  a. (2 points) In your own words, what purpose do D3 scales serve?
+  
+   $$\\[2.5cm]$$
+  
+  b. (2 points) The figure below visualizes miles per gallon vs. horsepower for
+  a cars in an array called `cars`. Define a D3 scale that could be used to set
+  the `x` coordinates of each circle on the SVG canvas. Assume that the SVG is
+  600 pixels tall and 1000 pixels wide. For reference, each car's data object
+  has a form like `{name: "chevrolet chevelle malibu", mpg: 18, horsepower: 130}`.
+  
+```{r, out.width = 250, fig.align = "left", echo = FALSE}
+include_graphics("figure/scatterplot.png")
+```
+  
+  $$\\[1.5cm]$$
+  
+  c. (1 point) Imagine that the following `.attrs()` code was used to define the
+  properties of each circle. Assuming your solution to (b), what code needs to
+  be filled in to set the `cx` attribute?
+  
+        ```{r, eval = FALSE}
+        //[code defining the circles data bind]
+        .attrs({
+          cx: ... // fill this part in,
+          stroke: "steelblue",
+          fill: "none",
+          ... [assume that all other attributes have been set]
+   })
+        ```
+  
+  $$\\[1.5cm]$$
+
+### Q5
+
+This problem asks you to share your understanding of the concept of graphical
+queries in data visualization.
+
+  a. (1 points) Provide a one sentence summary of the concept of graphical
+  queries.
+
+      $$\\[2.5cm]$$
+
+  b. (2 points) Describe an example application that uses a graphical query.
+  Give details of the interactivity patterns associated with your example. It is
+  enough to provide an annotated sketch.
+  
+      $$\\[2.5cm]$$
+    
+    
+  c. (2 point) Why is a graphical query appropriate in your example from part
+  (b)? Contrast the graphical query approach with a non-graphical alternative.
+  
+      $$\\[2.5cm]$$
+
+
+### Q6
+
+The following code creates an interactive Shiny app that provides a histogram
+that can be brushed to zoom into selected years in the California fires dataset.
+A screenshot of the final visualization is shown below. Brushing over certain
+years in the histogram highlights the corresponding fires in the dotplot.
+
+```{r, echo = FALSE, fig.align = "center", out.width = 400}
+include_graphics("figure/fires.png")
+```
+
+  a. (2 points) The starter code below sets up the overall interface, but
+  doesn't support brushing. Modify the UI so that years can be brushed as shown
+  in the screenshot.
+  
+        ```{r, eval = FALSE}
+ui <- fluidPage(
+  fluidRow(
+    column(8, plotOutput("dotplot")),
+    column(4, plotOutput("histogram"))
+    ),
+    dataTableOutput("table")
+  )
+         ```
+         
+      $$\\[1.5cm]$$
+  
+  b. (2 points) The starter code below sets up the server. Describe how to
+  modify the code so that it updates both the dotplot and the table to reflect
+  the currently brushed years. Be as specific as possible. The second argument
+  of `dotplot` is a vector of `TRUE` or `FALSE` specifying whether a given row
+  of fires should be highlighted. For reference, the function is given at the
+  end of the exam.
+  
+        ```{r, eval = FALSE}
+server <- function(input, output) {
+  output$dotplot <- renderPlot(dotplot(fires, # ??
+  output$histogram <- renderPlot(year_histogram(fires))
+  output$table <- renderDataTable( # ??
+}
+         ```
+         
+      $$\\[2cm]$$
+  
+  c. (2 points) Sketch the reactivity graph of your final application. Make sure
+  to distinguish input, output, and reactive nodes.
+  
+      $$\\[5cm]$$
+  
+### Q7
+
+In this problem, we will use D3's general update pattern to visualize a
+two-dimensional random walk. The result is an animation of a square that is
+moving in random directions across the screen and which leaves a "trail" of its
+20 most recently visited positions. Four screenshots from one run of the program
+are given below. The first two panels were taken within the first few timesteps,
+which is why they show less than 20 squares.
+
+```{r, echo = FALSE, fig.show = "keep", out.width = 100}
+include_graphics(c("figure/rw1.png", "figure/rw2.png", "figure/rw3.png", "figure/rw4.png"))
+```
+
+  You have been given the starter code below. `update_walk_data()` pushes an
+  array element specifying the next location of the random walk. It also removes
+  any array elements from more than 20 time units in the past. The `x` and `y`
+  attributes within each element give the `x` and `y` coordinates of the walk.
+  `timepoint` specifies the time step at which the array element was added. The
+  definition of `update_walk_data()` is given at the end of this exam for
+  reference.
+  
+```{r, eval = FALSE}
+let walk = [{x: 250, y: 250, timepoint: 0}],
+  timepoint = 0;
+
+function update() {
+  timepoint += 1;
+  walk = update_walk_data(walk, timepoint)
+
+  let rw = d3.select("svg")
+    .selectAll("rect")
+    .data(walk, d => d.timepoint)
+}
+
+d3.interval(update, 100)
+```
+
+  a. (2 points) How would you modify the `update()` function so that it removes
+all "old" random walk locations that are no longer contained within the `walk`
+array?
+
+   $$\\[2.5cm]$$
+
+  b. (2 points) How would you modify the `update()` function so that, after each
+time step, it appends a rectangle at the newest random walk location?
+
+   $$\\[2.5cm]$$
+
+  c. (2 points) Notice that in the screenshots above, the random walk squares
+become fainter the more time units they are into the past. How would you modify
+the `update()` function to reflect this?
+
+   $$\\[2.5cm]$$
+
+### Code Supplement
+
+_Supplementary code for Q6_
+
+```{r}
+dotplot <- function(df, selected) {
+  df %>%
+    mutate(
+      selected = selected,
+      selected = factor(selected, levels = c("TRUE", "FALSE"))
+      ) %>%
+  ggplot() +
+    geom_point(aes(day_of_year, Counties, size = AcresBurned, col = selected)) +
+    scale_color_manual(values = c("orange", "#e3e3e3"))
+}
+  
+year_histogram <- function(fires) {
+  ggplot(fires) +
+    geom_histogram(aes(year))
+}
+```
+
+_Supplementary code for Q7_
+
+```{r, eval = FALSE}
+let  generator = d3.randomUniform(-10, 10);
+
+function update_walk_data(walk, timepoint) {
+  walk.push({
+    x: walk[walk.length - 1].x + generator(),
+    y: walk[walk.length - 1].y + generator(),
+    timepoint: timepoint
+  })
+  return walk.filter(d => d.timepoint > timepoint - 20)
+}
+```

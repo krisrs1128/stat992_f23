@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>IMDB Shiny Application | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">IMDB Shiny Application</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Using Shiny to explore a movies dataset</em></p>
+
+<p><a href="https://mediaspace.wisc.edu/media/Week+2+-+3A+IMDB+Shiny+Application/1_yitx0198">Recording</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week2-3.Rmd">Code</a></p>
+
+<ol>
+  <li>
+    <p>So far, all of our Shiny applications have been based on toy
+simulated data. In this set of notes, we’ll use Shiny to explore a
+real dataset, illustrating the general development workflow in the
+process. Before diving into code, let’s consider the role of
+interactivity in data analysis.</p>
+  </li>
+  <li>
+    <p>A major difference between doing visualization on paper and on
+computers is that visualization on computers can make use of
+interactivity. An interactive visualization is one that changes in
+response to user cues. This allows a display to update in a way that
+provides a visual comparison that was not available in a previous
+view. In this way, interactive visualization allows users to answer
+a sequence of questions.</p>
+  </li>
+  <li>
+    <p>Selection, both of observations and of attributes, is fundamental to
+interactive visualization. This is because it precedes other
+interactive operations: you can select a subset of observations to
+filter down to or attributes to coordinate across multiple displays
+(we consider both types of interactivity in later lectures).</p>
+  </li>
+  <li>
+    <p>The code below selects movies to highlight based on Genre. We use a
+<code class="language-plaintext highlighter-rouge">selectInput</code> to create the dropdown menu. A reactive expression
+creates a new column (<code class="language-plaintext highlighter-rouge">selected</code>) in the <code class="language-plaintext highlighter-rouge">movies</code> dataset
+specifiying whether the current movie is selected. The reactive
+graph structure means that the ggplot2 figure is recreated each time
+the selection is changed, and the <code class="language-plaintext highlighter-rouge">selected</code> column is used to shade
+in the points. This process of changing the visual encoding of
+graphical marks depending on user selections is called “conditional
+encoding.”</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+library(lubridate)
+
+movies &lt;- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/apps/data/movies.csv") %&gt;%
+  mutate(
+    date = as_date(Release_Date, format = "%b %d %Y"),
+    year = year(date),
+    Major_Genre = fct_explicit_na(Major_Genre),
+    MPAA_Rating = fct_explicit_na(MPAA_Rating),
+  )
+
+genres &lt;- pull(movies, Major_Genre) %&gt;%
+  unique() %&gt;%
+  na.omit()
+
+### functions used in app
+scatterplot &lt;- function(df) {
+  ggplot(df) +
+    geom_point(
+      aes(Rotten_Tomatoes_Rating, IMDB_Rating, size = selected, alpha = selected)
+    ) +
+    scale_size(limits = c(0, 1), range = c(.5, 2), guide = "none") +
+    scale_alpha(limits = c(0, 1), range = c(.1, 1), guide = "none")
+}
+
+### definition of app
+ui &lt;- fluidPage(
+  titlePanel("IMDB Analysis"),
+  selectInput("genres", "Genre", genres),
+  plotOutput("ratings_scatter")
+)
+
+server &lt;- function(input, output) {
+  movies_subset &lt;- reactive({
+    movies %&gt;%
+      mutate(selected = 1 * (Major_Genre %in% input$genres))
+  })
+
+  output$ratings_scatter &lt;- renderPlot({
+    scatterplot(movies_subset())
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/02971f81-3af5-4fdb-89d7-84a663778546/" allowfullscreen="" data-external="1" height="550" width="600"></iframe>
+
+    <p><img src="/https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/figures/initial_imdb.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We can extend this further. Let’s allow the user to filter by year
+and MPAA rating. Notice that there are some years in the future! We
+also find that there are systematic differences in IMDB and Rotten
+Tomatoes ratings as a function of these variables.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+library(lubridate)
+
+movies &lt;- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/apps/data/movies.csv") %&gt;%
+  mutate(
+    date = as_date(Release_Date, format = "%b %d %Y"),
+    year = year(date),
+    Major_Genre = fct_explicit_na(Major_Genre),
+    MPAA_Rating = fct_explicit_na(MPAA_Rating),
+  )
+
+genres &lt;- pull(movies, Major_Genre) %&gt;%
+  unique() %&gt;%
+  na.omit()
+ratings &lt;- pull(movies, MPAA_Rating) %&gt;%
+  unique() %&gt;%
+  na.omit()
+
+### functions used in app
+scatterplot &lt;- function(df) {
+  ggplot(df) +
+    geom_point(
+      aes(Rotten_Tomatoes_Rating, IMDB_Rating, size = selected, alpha = selected)
+    ) +
+    scale_size(limits = c(0, 1), range = c(.5, 2), guide = "none") +
+    scale_alpha(limits = c(0, 1), range = c(.1, 1), guide = "none")
+}
+
+### definition of app
+ui &lt;- fluidPage(
+  titlePanel("IMDB Analysis"),
+  selectInput("genres", "Genre", genres, multiple = TRUE),
+  checkboxGroupInput("mpaa", "MPAA Rating", ratings, ratings),
+  sliderInput("year", "Year", min = min(movies$year), max = max(movies$year), c(1928, 2020), sep = ""),
+  plotOutput("ratings_scatter")
+)
+
+server &lt;- function(input, output) {
+  movies_subset &lt;- reactive({
+    movies %&gt;%
+      mutate(selected = 1 * (
+        (Major_Genre %in% input$genres) &amp;
+        (MPAA_Rating %in% input$mpaa) &amp;
+        (year &gt;= input$year[1]) &amp;
+        (year &lt;= input$year[2])
+      ))
+  })
+
+  output$ratings_scatter &lt;- renderPlot({
+    scatterplot(movies_subset())
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/9036974c-176a-4e9b-963d-c25eb45f5635/" allowfullscreen="" data-external="1" height="900" width="600"></iframe>
+
+    <p><img src="/https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/figures/final_imdb.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We’ll include a final version of this plot which additionally shows
+the movie name when points are hovered. To accomplish this, we can
+no longer use <code class="language-plaintext highlighter-rouge">ggplot2</code> on its own – it has to be linked with a
+plotting library that renders web-based visualizations (not just
+static image files). This is what the <code class="language-plaintext highlighter-rouge">ggplotly()</code> call does in the
+updated version of the app. The mouseover text is added through the
+<code class="language-plaintext highlighter-rouge">tooltip</code> argument.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+library(lubridate)
+library(plotly)
+
+movies &lt;- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/apps/data/movies.csv") %&gt;%
+  mutate(
+    date = as_date(Release_Date, format = "%b %d %Y"),
+    year = year(date),
+    Major_Genre = fct_explicit_na(Major_Genre),
+    MPAA_Rating = fct_explicit_na(MPAA_Rating),
+  )
+
+genres &lt;- pull(movies, Major_Genre) %&gt;%
+  unique() %&gt;%
+  na.omit()
+ratings &lt;- pull(movies, MPAA_Rating) %&gt;%
+  unique() %&gt;%
+  na.omit()
+
+### functions used in app
+scatterplot &lt;- function(df) {
+  p &lt;- ggplot(mapping = aes(Rotten_Tomatoes_Rating, IMDB_Rating)) +
+    geom_point(data = df %&gt;% filter(selected),  aes(text = Title), size = 2, alpha = 1) +
+    geom_point(data = df %&gt;% filter(!selected),  size = .5, alpha = .1)
+  ggplotly(p, tooltip = "Title") %&gt;%
+    style(hoveron = "fill")
+}
+
+### definition of app
+ui &lt;- fluidPage(
+  titlePanel("IMDB Analysis"),
+  selectInput("genres", "Genre", genres),
+  checkboxGroupInput("mpaa", "MPAA Rating", ratings, ratings),
+  sliderInput("year", "Year", min = min(movies$year), max = max(movies$year), c(1928, 2020), sep = ""),
+  plotlyOutput("ratings_scatter")
+)
+
+server &lt;- function(input, output) {
+  movies_subset &lt;- reactive({
+    movies %&gt;%
+      mutate(selected = (
+        (Major_Genre %in% input$genres) &amp;
+        (MPAA_Rating %in% input$mpaa) &amp;
+        (year &gt;= input$year[1]) &amp;
+        (year &lt;= input$year[2])
+      ))
+  })
+
+  output$ratings_scatter &lt;- renderPlotly({
+    scatterplot(movies_subset())
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/2151742d-4b80-4200-9b91-55dda592a9f6/" allowfullscreen="" data-external="1" height="900" width="600"></iframe>
+  </li>
+  <li>
+    <p>These visualizations are an instance of the more general idea of
+using filtering to reduce complexity in data. Filtering is an
+especially powerful technique in the interactive paradigm, where it
+is possible to easily reverse (or compare) filtering choices.</p>
+  </li>
+  <li>
+    <p>Conceptually, what we are doing falls under the name of “Dynamic
+Querying,” which refers more generally to updating a visualization
+based on user queries. There are several ways to think about these
+dynamic queries,</p>
+
+    <ul>
+      <li>Interpretation 1: Dynamic queries create the visual analog of a
+database interaction. Rather than using a programming-based
+interface to filter elements or select attributes, we can design
+interactive visual equivalents.</li>
+      <li>Interpretation 2: Dynamic queries allow rapid evaluation of
+conditional probabilities. The visualization above was designed
+to answer: What is the joint distribution of movie ratings,
+conditional on being a drama?</li>
+    </ul>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

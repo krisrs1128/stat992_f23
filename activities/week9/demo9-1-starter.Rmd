@@ -1,0 +1,62 @@
+---
+title: "Untitled"
+output: html_document
+date: '`r Sys.Date()`'
+---
+
+```{r}
+library(tidygraph)
+library(tidyverse)
+library(ggraph)
+theme_set(theme_bw())
+```
+
+```{r}
+nodes <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/climate-nodes.csv")
+edges <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/climate-edges.csv")
+```
+
+When starting, use only the first 500 nodes.
+
+```{r}
+G <- tbl_graph(nodes, edges) %>%
+  filter(row_number() < 500)
+
+ggraph(G) +
+  geom_edge_link() +
+  geom_node_point()
+
+G <- G %>%
+  mutate(
+    session_group = fct_lump_n(session, 8),
+    genre_group = fct_lump_n(genre, 8)
+  )
+
+ggraph(G) +
+  geom_edge_link(edge_color = "#d0d0d0", width = 0.2) +
+  geom_node_point(aes(col = session_group, size = views)) +
+  facet_wrap(~ genre_group) +
+  scale_size(range = c(0.1, 5))
+```
+
+
+
+```{r}
+G  %>%
+  distinct(genre)
+```
+
+
+```{r}
+ggraph(G, "matrix") +
+  geom_edge_tile(aes(fill = type)) +
+  geom_node_point(aes(size = views), x = -1) +
+  geom_node_point(aes(size = views), y = -1) +
+  scale_size(range = c(0.1, 4))
+```
+
+
+
+
+
+

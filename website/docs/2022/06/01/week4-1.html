@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>HTML Webpage Structure | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">HTML Webpage Structure</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>A tour of the parts of an HTML page</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week4/week4-1">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week+4+-+1A+HTML+Webpage+Structure/1_8dixel51">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Behind the scenes, interactive visualizations in D3 are just webpages. For
+this reason, it will be important to learn at least the basics of HTML web
+programming. These notes give a brief overview.</p>
+  </li>
+  <li>
+    <p>The most basic HTML page looks like this,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+   &lt;head&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre></div>    </div>
+
+    <p>If you copy this into a textfile with the suffix <code class="language-plaintext highlighter-rouge">.html</code> and then open it in a
+ browser, you will see a <a href="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/blank_page.html">completely blank
+ webpage</a>.
+ Different sections of the webpage are opened and closed with paired tags, like
+ <code class="language-plaintext highlighter-rouge">&lt;tag&gt;</code> and <code class="language-plaintext highlighter-rouge">&lt;/tag&gt;</code>, respectively. Every page has a <code class="language-plaintext highlighter-rouge">&lt;head&gt;&lt;/head&gt;</code> section
+ which  loads the necessary resources and a <code class="language-plaintext highlighter-rouge">&lt;body&gt;&lt;/body&gt;</code> section that
+ contains the main content of the webpage.</p>
+  </li>
+  <li>
+    <p>For example, we can load the D3 library by adding a <code class="language-plaintext highlighter-rouge">script</code> tag in the page <code class="language-plaintext highlighter-rouge">head</code>,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+   &lt;head&gt;
+     &lt;script src="https://d3js.org/d3.v7.min.js"&gt;&lt;/script&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre></div>    </div>
+
+    <p>This is the HTML equivalent of <code class="language-plaintext highlighter-rouge">library(packageName)</code> in R. For now though, we
+ won’t be using this library.</p>
+  </li>
+  <li>
+    <p>We can add content by including tags in the body. For example, to create a
+header with some text under it, we can use the header and paragraph tags</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  &lt;!DOCTYPE html&gt;
+  &lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+  	&lt;h1&gt;This is a Header&lt;/h1&gt;
+  	&lt;p&gt;This text is in a paragraph&lt;/p&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/example_headings.html" data-external="1" height="120" width="600"></iframe>
+
+<ol>
+  <li>We can create groups of related tags using the <code class="language-plaintext highlighter-rouge">&lt;g&gt;</code> tag. This gives every
+DOM page a tree structure,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  &lt;!DOCTYPE html&gt;
+  &lt;html&gt;
+  &lt;head&gt;
+  &lt;/head&gt;
+    &lt;body&gt;
+    &lt;h1&gt;Header&lt;/h1&gt;
+    &lt;g&gt;
+      &lt;h2&gt;Subheader&lt;/h2&gt;
+      &lt;p&gt;Example text&lt;/p&gt;
+    &lt;/g&gt;
+    &lt;g&gt;
+      &lt;h2&gt;Subheader 2&lt;/h2&gt;
+      &lt;p&gt;More text&lt;/p&gt;
+    &lt;/g&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/groups.html" height="220" data-external="1"></iframe>
+
+<ol>
+  <li>Most of the D3 visualizations we create in this course will be made using
+Scalable Vector Graphics (SVG). This is a way for drawing different shapes in
+the browser by declaring specific tags. For example, we can draw a rectangle, a
+circle, and a line,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  &lt;!DOCTYPE html&gt;
+  &lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+  	&lt;svg width=500 height=500&gt;
+  	&lt;rect width=100 height=100 fill="red"/&gt;
+    &lt;circle cx=250 cy=300 r=10 /&gt;
+  	&lt;path d = "M 150 150 L 180 180 L 210 150" stroke="blue" fill="none"/&gt;
+  	&lt;/svg&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;
+</code></pre></div></div>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/svg.html" height="500"></iframe>
+<p>Notice that we had to enclose all the SVG objects within the <code class="language-plaintext highlighter-rouge">svg</code> tags.
+  Otherwise, it wouldn’t know how to render these shapes. The attributes
+  appearing within the tags give details about how to draw the associated SVG
+  element. Each type of element comes with its own configurable attributes. Can
+  you guess what <code class="language-plaintext highlighter-rouge">cx</code> and <code class="language-plaintext highlighter-rouge">cy</code> control for the circle? Check by modifying the
+  code and seeing how the page changes. For the purpose of the class, there will
+  only ever be a few attributes that we modify (positions, sizes, and colors),
+  and we will introduce them as we go along.</p>
+
+<ol>
+  <li>
+    <p>In fact, we can set attributes for any tag on an HTML page. It’s most common
+to set “id” and “class” attributes for unique and groups of similar tags,
+respectively. These attributes make it possible to refer to specific tags within
+the webpage.</p>
+  </li>
+  <li>
+    <p>One common situation in which we will want to refer to specific tags is when
+we want to modify its style. This can be done by using a stylesheet. For
+example, if we want to change the color and font for the header, we can create a
+class for the header (“fancyheader”) and then refer to it in a separate file
+(<code class="language-plaintext highlighter-rouge">style.css</code>) which looks like this,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
+
+ .fancyheader {
+   color: #ff4500;
+   font-family: "Press Start 2P";
+ }
+</code></pre></div>    </div>
+  	(notice the <code class="language-plaintext highlighter-rouge">.</code> before the class name). Then, we modify our HTML header so that this style file is correctly loaded.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+   &lt;head&gt;
+     &lt;link rel="stylesheet" href="styles.css"&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;h1 class="fancyheader"&gt;This is a Header&lt;/h1&gt;
+     &lt;p&gt;This text is in a paragraph&lt;/p&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/styles.html"></iframe>
+
+<ol>
+  <li>
+    <p>The same type of manipulation can be done for IDs, though an ID should only
+be applied to one tag on the page. The only difference in the code is how the
+reference is made within the css file,</p>
+
+    <p><code class="language-plaintext highlighter-rouge">.css</code> file (notice the <code class="language-plaintext highlighter-rouge">#</code> in this version, which refers to tags instead of
+ classes)</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
+
+ #fancyheader {
+   color: #ff4500;
+   font-family: "Press Start 2P";
+ }
+</code></pre></div>    </div>
+
+    <p><code class="language-plaintext highlighter-rouge">.html</code> file</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+   &lt;head&gt;
+     &lt;link rel="stylesheet" href="styles2.css"&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;h1 id="fancyheader"&gt;This is a Header&lt;/h1&gt;
+     &lt;p&gt;This text is in a paragraph&lt;/p&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-1/styles2.html"></iframe>
+
+<ol>
+  <li>
+    <p>Most modern browsers give a way of inspecting the HTML that defines each
+webpage. For example, in Chrome, you can enter the “Developer Tools” using Cmd +
+Shift + J. The “Elements” tab shows the overall structure of the webpage.</p>
+  </li>
+  <li>
+    <p>For most of the visualization examples used in this course, I start with the
+template below.</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	&lt;!DOCTYPE html&gt;
+	&lt;html&gt;
+	  &lt;head&gt;
+	    &lt;script src="https://d3js.org/d3.v7.min.js"&gt;&lt;/script&gt;
+	    &lt;script src="https://d3js.org/d3-selection-multi.v1.min.js"&gt;&lt;/script&gt;
+	    &lt;link rel="stylesheet" href="styles.css"&gt;
+	  &lt;/head&gt;
+	  &lt;body&gt;
+	    &lt;svg height=500 width=900&gt;&lt;/svg&gt;
+	  &lt;/body&gt;
+	  &lt;script src="example.js"&gt;&lt;/script&gt;
+	&lt;/html&gt;
+</code></pre></div></div>
+
+<ol>
+  <li>A final conceptual point: These pages can be thought of as a tree, because
+all tags are nested within a parent. For example, the template above has the
+following tree structure.</li>
+</ol>
+
+<p><img src="https://raw.githubusercontent.com/krisrs1128/stat679_code/main/examples/week4/week4-1/tree.png" /></p>
+
+<p>Since HTML follows something called the Document Object Model (DOM), this
+    tree is sometimes referred to as the “DOM tree.”</p>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Click and Hover Interaction in D3 (Part 1) | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Click and Hover Interaction in D3 (Part 1)</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Updating a visualization through clicks and mouseovers</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week6/week6-2">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week%206%20-%202%3A%20Click%20and%20Hover%20Interaction%20in%20D3%20(Part%201)/1_279viw2s">Recording</a></p>
+
+<ol>
+  <li>In the previous notes, we saw how user can supply interactions using D3 event
+listeners. Here, we’ll see how to design interactive visualizations that respond
+to mouse click and hover events.</li>
+  <li>We’ll work with the movie ratings dataset, which we <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week2-3.html">previously used</a> when
+introducing interactivity in Shiny. The code at these links [1, 2] makes a
+static scatterplot for these data, without implementing any interactivity. The scatterplot points are appended using a data bind,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#circles")
+ .selectAll("circle")
+ .data(data, d =&gt; d.Title).enter()
+ .append("circle")
+ .attrs({
+   class: "plain",
+   cx: d =&gt; scales.x(d.IMDB_Rating),
+   cy: d =&gt; scales.y(d.Rotten_Tomatoes_Rating),
+   fill: d =&gt; scales.fill(d.Genre_Group)
+ })
+</code></pre></div>    </div>
+    <p>and the axes are created using <code class="language-plaintext highlighter-rouge">d3.axisLeft</code> and <code class="language-plaintext highlighter-rouge">d3.axisBottom</code> applied to the scales,</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  [g element onto which to append the x-axes]
+    .call(d3.axisBottom(scales.x).ticks(4))
+
+  [g element onto which to append the y-axes]
+    .call(d3.axisLeft(scales.y).ticks(4))
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-2/imdb-static.html" height="400" width="700"></iframe>
+
+<ol>
+  <li>Let’s first consider how to implement a tooltip using hover events. A
+tooltip provides “detailed-on-demand” when the user indicates interest in a
+specific elements of a visualization. In our application, we’ll display the
+movie name whenever the user hovers over a point in the scatterplot. However, in
+principle, any pieces of information could be revealed.</li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-2/imdb-tooltip.html" height="400" width="700"></iframe>
+
+<ol>
+  <li>To implement this type of interactivity, we first listen for anytime the user
+hovers over a movie.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#circles")
+ .selectAll("circle")
+ .data(data, d =&gt; d.Title).enter()
+ ... everything the same as before until...
+ .on("mouseover", (ev, d) =&gt; mouseover(ev, d))
+</code></pre></div>    </div>
+    <p>The anonymous function <code class="language-plaintext highlighter-rouge">(ev, d) =&gt; mouseover(ev, d)</code> makes sure that we pass
+  both properties of the event (<code class="language-plaintext highlighter-rouge">ev</code>) and the underlying data associated with
+  the HTML element under consideration (<code class="language-plaintext highlighter-rouge">d</code>).</p>
+  </li>
+  <li>
+    <p>Next, we update the text that will contain the movie names. Whenever a hover
+event occurs, we will need to (i) change the text of the tooltip and (ii) move
+the tooltip to the location of the current point. Note that we have already
+created an initial <code class="language-plaintext highlighter-rouge">&lt;div&gt;</code> element with <code class="language-plaintext highlighter-rouge">id="tooltip"</code> on the HTML page within
+which we can append the movie title.</p>
+  </li>
+  <li>To change the text of the tooltip, we apply <code class="language-plaintext highlighter-rouge">.text()</code> to the current data
+selection. We move the tooltip using a translation of the parent <code class="language-plaintext highlighter-rouge">div</code> element.
+We also change the circle to class <code class="language-plaintext highlighter-rouge">highlighted</code> so that it appears larger than
+the surrounding circles.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function mouseover(ev, d) {
+ let loc = d3.pointer(ev)
+ d3.select("#tooltip")
+   .attr("transform", `translate(${loc[0]}, ${loc[1]})`)
+   .select("text")
+   .text(d.Title)
+
+ d3.select(ev.target).attr("class", "highlighted")
+}
+</code></pre></div>    </div>
+  </li>
+  <li>If we want to display much more information about an item using hover events,
+it can be useful to link the hovered item with a table. This can be accomplished
+using a mechanism similar to a tooltip. We again track hover events and update
+text in a predefined HTML element (a <code class="language-plaintext highlighter-rouge">&lt;table&gt;</code> in this case). We’ve given IDs
+within the table that will allow us to quickly substitute titles, genres, etc.
+within it. In a way, this implementation is even simpler, because we don’t have
+to move the text to user’s mouse location.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function mouseover(ev, d) {
+ d3.select("#title").text(d.Title)
+ d3.select("#genre").text(d.Genre_Group)
+ d3.select("#year").text(d.Release_Date)
+ d3.select("#gross").text(d.Worldwide_Gross)
+ d3.select(ev.target).attr("class", "highlighted")
+}
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-2/imdb-table.html" width="700" height="600"></iframe>
+
+<ol>
+  <li>Next, let’s consider click events. Imagine we wanted to allow select movie
+genres by clicking elements of the legend, like in the visualization below,</li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-3/imdb-legend-click.html" width="700" height="600"></iframe>
+
+<ol>
+  <li>To implement this, we’ll use the same array-based logic as in our <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-1.html">earlier
+select-input-based gapminder visualization</a>. That is, we’ll keep track of an
+array of the currently selected genres and will enter and exit datapoints each
+time the array is changed.</li>
+  <li>The main differences with what we implemented with the tooltip are that (i)
+we need to update the array based on clicks on the rectangles that form the
+legend and (ii) when a rectangle is clicked, we need to update not just the
+original plot, but also the appearance legend that defines it.</li>
+  <li>To this end, we bind click listeners to the rectangles in the legend. At the
+start, all the legend elements are considered selected, and the associated
+selection array includes every genre. Whenever a rectangle is clicked, we modify
+the array,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#legend .legendCells")
+  .selectAll(".cell") // creates selection of the legend rectangles
+  .on("click", (ev, d) =&gt; toggle_selection(ev, d))
+
+...
+
+function toggle_selection(ev, d) {
+  let ix = selected.indexOf(d)
+  if (ix == -1) {
+    selected.push(d); // adds genre to the selected list
+  } else {
+    selected.splice(ix, 1) // removes genre from the selected list
+  }
+  update_view()
+}
+</code></pre></div></div>
+
+<ol>
+  <li>After the array is modified, we then update the opacity and size of the
+scatterplot circles to reflect the selection,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function update_view() {
+  d3.select("#circles")
+    .selectAll("circle")
+    .transition()
+    .duration(500)
+    .attrs({
+      opacity: d =&gt; selected.indexOf(d.Genre) == -1 ? 0.4 : 1,
+      r: d =&gt; selected.indexOf(d.Genre) == -1 ? 1 : 2
+    })
+  ...
+
+</code></pre></div></div>
+
+<ol>
+  <li>We also change the encoding of the associated legend rectangle and text, to
+let the user know that the associated genre has been added / removed from teh selection,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select(".legendCells")
+  .selectAll("rect")
+  .attr("opacity", (d) =&gt; selected.indexOf(d) == -1 ? 0.4 : 1)
+d3.select(".legendCells")
+  .selectAll("text")
+  .attr("opacity", (d) =&gt; selected.indexOf(d) == -1 ? 0.4 : 1)
+</code></pre></div></div>
+
+<ol>
+  <li>The full implementation of this example can be found here [<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-3/imdb-legend-click.js">1</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-3/imdb-legend-click.html">2</a>].</li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

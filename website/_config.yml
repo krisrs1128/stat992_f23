@@ -1,0 +1,47 @@
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+#
+# If you need help with YAML syntax, here are some quick references for you:
+# https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
+# https://learnxinyminutes.com/docs/yaml/
+#
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
+
+title: Statistical Data Visualization
+email: ksankaran@wisc.edu
+description: >- # this means to ignore newlines until "baseurl:"
+  These are notes from STAT 992 (Fall 2022) at UW Madison.
+baseurl: "/stat992_f23/website/docs" # the subpath of your site, e.g. /blog
+relative_url: "/stat992_f23/website/docs"
+github_username:  krisrs1128
+markdown: kramdown
+theme_setting:
+  code: true
+  math: true
+  mermaid: true
+
+head_code: |
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+# Build settings
+destination: docs
+theme: jekyll-theme-persephone
+plugins:
+  - jekyll-feed
+
+comment:
+  enabled: true

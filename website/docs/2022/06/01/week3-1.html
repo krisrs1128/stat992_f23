@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Graphical Queries - Click Events | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Graphical Queries - Click Events</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>An introduction to click events in Shiny</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week3-1.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week+3+-+1A+Graphical+Queries+-+Click+Events/1_9zrb0tjb">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Some of the most sophisticated interactive data visualizations are
+based on the idea that user queries can themselves be defined
+visually. For example, to select a date range, we could directly
+interact with a time series plot, rather than relying on a slider
+input. Or, instead of a long dropdown menu of items, a user could
+select items by clicking on bars in a bar plot. There are many
+variations of this idea, but they all leverage graphical (rather
+than textual) displays to define queries. The advantage of this
+approach is that it increases information density – the selection
+inputs themselves encode data.</p>
+  </li>
+  <li>
+    <p>To implement this in Shiny, we first need a way of registering user
+interactions on plots themselves. We will consider two types of plot
+interaction mechanisms: clicks and brushes. These can be specified
+by adding <code class="language-plaintext highlighter-rouge">click</code> or <code class="language-plaintext highlighter-rouge">brush</code> events to <code class="language-plaintext highlighter-rouge">plotOutput</code> objects.</p>
+  </li>
+  <li>
+    <p>This creates a UI with a single plot on which we will be able to
+track user clicks,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ui &lt;- fluidPage(
+  plotOutput("plot", click = "plot_click")
+)
+</code></pre></div>    </div>
+
+    <p>Here, <code class="language-plaintext highlighter-rouge">plot_click</code> is an ID that can be used as <code class="language-plaintext highlighter-rouge">input$plot_click</code>
+in the server. We could name it however we want, but we need to be
+consistent across the UI and server (just like ordinary,
+non-graphical inputs).</p>
+  </li>
+  <li>
+    <p>Before, we just needed to place the <code class="language-plaintext highlighter-rouge">input$id</code> items within <code class="language-plaintext highlighter-rouge">render</code>
+and <code class="language-plaintext highlighter-rouge">reactive</code> server components, and the associated outputs would
+automatically know to redraw each time the value of any input was
+changed. Clicks are treated slightly differently. We have to
+both (a) recognize when a click event has occurred and (b) extract
+relevant information about what the click was referring to.</p>
+  </li>
+  <li>
+    <p>For (a), we generally use <code class="language-plaintext highlighter-rouge">observeEvent</code>,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>observeEvent(
+  input$plot_click,
+  ... things to do when the plot is clicked ...
+)
+</code></pre></div>    </div>
+
+    <p>This piece of code will be run anytime the plot is clicked.</p>
+  </li>
+  <li>
+    <p>For (b), we can use the <code class="language-plaintext highlighter-rouge">nearPoints</code> helper function. Suppose the
+plot was made using the data.frame <code class="language-plaintext highlighter-rouge">x</code>. Then</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nearPoints(x, input$click)
+</code></pre></div>    </div>
+
+    <p>will return the samples in <code class="language-plaintext highlighter-rouge">x</code> that are close to the clicked
+location. We will often use a variant of this code that doesn’t just
+return the closeby samples – it returns all samples, along with
+their distance from the clicked location,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nearPoints(x, input$click, allRows = TRUE, addDist = TRUE)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We are almost ready to build a visualization whose outputs respond
+to graphical queries. Suppose we want a scatterplot where point
+sizes update according to their distance from the user’s click.
+Everytime the plot is clicked, we need to update the set of
+distances between samples and the clicked point. We then need to
+rerender the plot to reflect the new distances. This logic is
+captured by the block below,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server &lt;- function(input, output) {
+  dist &lt;- reactiveVal(rep(1, nrow(x)))
+  observeEvent(
+    input$plot_click,
+    dist(reset_dist(x, input$plot_click))
+  )
+
+  output$plot &lt;- renderPlot({
+    scatter(x, dist())
+  })
+}
+</code></pre></div>    </div>
+
+    <p>The code above uses one new concept, the <code class="language-plaintext highlighter-rouge">reactiveVal</code> on the first
+line of the function. It is a variable that doesn’t directly depend
+on any inputs, which can become a source node for downstream
+<code class="language-plaintext highlighter-rouge">reactive</code> and <code class="language-plaintext highlighter-rouge">render</code> nodes in the reactive graph. Anytime the
+variable’s value is changed, all downstream nodes will be
+recomputed. A very common pattern is use an <code class="language-plaintext highlighter-rouge">observeEvent</code> to update
+a <code class="language-plaintext highlighter-rouge">reactiveVal</code> every time a graphical query is performed. Any plots
+that depend on this value will then be updated. For example,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>val &lt;- reactiveVal(initial_val) # initialize the reactive value
+
+observeEvent(
+  ...some input event...
+  ...do some computation...
+  val(new_value) # update val to new_val
+)
+
+# runs each time the reactiveVal changes
+renderPlot({
+  val() # get the current value of the reactive value
+})
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>So, revisiting the <code class="language-plaintext highlighter-rouge">dist</code> in the earlier code block, we see that it
+is initialized as a vector of <code class="language-plaintext highlighter-rouge">1</code>’s whose length is equal to the
+number of rows of <code class="language-plaintext highlighter-rouge">x</code>. Everytime the plot is clicked, we update the
+value of <code class="language-plaintext highlighter-rouge">dist</code> according to the function <code class="language-plaintext highlighter-rouge">reset_dist</code>. Finally, the
+changed value of <code class="language-plaintext highlighter-rouge">dist</code> triggers a rerun of <code class="language-plaintext highlighter-rouge">renderPlot</code>. Let’s look
+at the full application in action. It makes a scatterplot using the
+cars dataset and resizes points every time the plot is clicked.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(shiny)
+
+# wrapper to get the distances from points to clicks
+reset_dist &lt;- function(x, click) {
+  nearPoints(x, click, allRows = TRUE, addDist = TRUE)$dist_
+}
+
+# scatterplot plot with point size dependent on click location
+scatter &lt;- function(x, dists) {
+  x %&gt;%
+    mutate(dist = dists) %&gt;%
+    ggplot() +
+    geom_point(aes(mpg, hp, size = dist)) +
+    scale_size(range = c(6, 1))
+}
+
+ui &lt;- fluidPage(
+  plotOutput("plot", click = "plot_click")
+)
+
+server &lt;- function(input, output) {
+  dist &lt;- reactiveVal(rep(1, nrow(mtcars)))
+  observeEvent(
+    input$plot_click,
+    dist(reset_dist(mtcars, input$plot_click))
+  )
+
+  output$plot &lt;- renderPlot(scatter(mtcars, dist()))
+}
+
+shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/17a54e4c-5237-4018-b6fe-20c1555cf337/" allowfullscreen="" data-external="1" height="400" width="600"></iframe>
+  </li>
+  <li>
+    <p>The <code class="language-plaintext highlighter-rouge">reset_dist</code> function uses <code class="language-plaintext highlighter-rouge">nearPoints</code> to compute the distance
+between each sample and the plot, each time the plot is clicked. The
+associated reactive value <code class="language-plaintext highlighter-rouge">dist</code> gets changed, which triggers
+<code class="language-plaintext highlighter-rouge">scatterplot</code> to run, and it is encoded using size in the downstream
+ggplot2 figure.</p>
+  </li>
+  <li>
+    <p>We can make the plot more interesting by outputting a table showing
+the original dataset. Using the same <code class="language-plaintext highlighter-rouge">dist()</code> call, we can sort the
+table by distance each time the plot is clicked.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(shiny)
+mtcars &lt;- add_rownames(mtcars)
+
+reset_dist &lt;- function(x, click) {
+  nearPoints(x, click, allRows = TRUE, addDist = TRUE)$dist_
+}
+
+scatter &lt;- function(x, dists) {
+  x %&gt;%
+    mutate(dist = dists) %&gt;%
+    ggplot() +
+    geom_point(aes(mpg, hp, size = dist)) +
+    scale_size(range = c(6, 1))
+}
+
+ui &lt;- fluidPage(
+  plotOutput("plot", click = "plot_click"),
+  dataTableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  dist &lt;- reactiveVal(rep(1, nrow(mtcars)))
+  observeEvent(
+    input$plot_click,
+    dist(reset_dist(mtcars, input$plot_click))
+  )
+
+  output$plot &lt;- renderPlot(scatter(mtcars, dist()))
+  output$table &lt;- renderDataTable({
+    mtcars %&gt;%
+      mutate(dist = dist()) %&gt;%
+      arrange(dist)
+  })
+}
+
+shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/9fcf3583-a74f-4d84-8d7c-68ac3595bf6b/" allowfullscreen="" data-external="1" height="750" width="800"></iframe>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

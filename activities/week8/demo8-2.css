@@ -1,0 +1,22 @@
+
+/* the command below was exported from https://fonts.google.com/ */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@500&family=Oswald&display=swap');
+
+#lines .plain {
+  fill: none;
+  stroke-width: 1px;
+  stroke-opacity: 0.1;
+  stroke: #A697A6;
+}
+
+#lines .highlight {
+  fill: none;
+  stroke-width: 2px;
+  stroke-opacity: 1;
+  stroke: #3F2540;
+}
+
+#table_wrapper {
+  font-family: "Open Sans";
+  font-size: 10px;
+}

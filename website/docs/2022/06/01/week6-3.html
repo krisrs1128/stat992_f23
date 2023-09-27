@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Click and Hover Interaction in D3 (Part 2) | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Click and Hover Interaction in D3 (Part 2)</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Voronoi mouse over and graphical queries</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week6/week6-3">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week%206%20-%203%3A%20Click%20and%20Hover%20Interaction%20in%20D3%20(Part%202)/1_onon3q5m">Recording</a></p>
+
+<ol>
+  <li>In our previous notes, we saw how to use hover and click events to define
+user interaction in D3 visualizations. In these notes, we’ll consider two
+extensions that can lead to more effective interfaces: Voronoi mouseover effects
+and click-based graphical queries.</li>
+  <li>Our earlier <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-2.html">hover implementations</a> can be frustrating to use, because they
+require that we place our mouse exactly on top of one of the scatterplot
+circles. If the circles were any smaller than they are, interaction would be
+essentially impossible.</li>
+  <li>A better strategy is to use a Voronoi mouseover. This is just a fancy way of
+saying that we should register a mouseover whenever the mouse moves near to, but
+not exactly on, a potential object of interest. Specifically, we will register a
+mouse event whenever the nearest neighbor of the mouse’s current position
+changes. I’m showing the background neighborhoods with the thin grey lines, but
+in a real-world implementation, these boundaries would be not be drawn.</li>
+</ol>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-2/imdb-voronoi.html" width="700" height="500"></iframe>
+
+<ol>
+  <li>The main idea is to create a <code class="language-plaintext highlighter-rouge">d3.Delaunay</code> object which can be used to
+compute the nearest neighboring datapoint of a mouse at coordinate position <code class="language-plaintext highlighter-rouge">(x, y)</code>. This can be implemented by using D3’s <a href="https://github.com/d3/d3-delaunay">Delauny triangulation library</a>. The first argument of
+<code class="language-plaintext highlighter-rouge">d3.Delanay.from()</code> defines the dataset from which to build neighborhoods. The
+second and third identify the <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> pixel positions associated with each
+data point.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  let delaunay = d3.Delaunay.from(data, d =&gt; scales.x(d.IMDB_Rating), d =&gt; scales.y(d.Rotten_Tomatoes_Rating)),
+</code></pre></div></div>
+
+<ol>
+  <li>We next register whenever the mouse moves on the background SVG and
+recalculate the nearest neighbor using the <code class="language-plaintext highlighter-rouge">.find()</code> method from Delaunay. Using
+the same logic as in our previous hover example, we can then update the location
+of the tooltip to reflect this mouseover events. The resulting interaction is
+much smoother than our previous implementation.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("svg").on("mousemove", (ev) =&gt; mouseover(ev, data, delaunay, scales))
+
+...
+
+function mouseover(ev, data, delaunay, scales) {
+  let ix = delaunay.find(ev.pageX, ev.pageY);
+
+  d3.select("#tooltip")  // first move tooltip to current datapoint's location
+    .attr("transform", `translate(${scales.x(data[ix].IMDB_Rating)}, ${scales.y(data[ix].Rotten_Tomatoes_Rating)})`)
+    .select("text")
+    .text(data[ix].Title); // fill in the current movie's name
+</code></pre></div></div>
+
+<ol>
+  <li>Next, let’s consider how to improve click events through graphical queries.
+Recall from our Shiny discussion that it can be helpful to define queries using
+separate, adjacent visualizations. This increases the information density of a
+visualization and minimizes the need for additional interface elements.</li>
+  <li>As a specific example, let’s modify the legend click selection from the
+previous notes so that the legend is actually a barchart showing the frequencies
+of the different movie types. In this way, the legend has been modified to
+encode more information.</li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-3/imdb-linked.html" width="650" height="400"></iframe>
+
+<ol>
+  <li>To implement this change, we created a new dataset, <code class="language-plaintext highlighter-rouge">stats.csv</code>, associated
+with the genre totals. We read in both simultaneously using the following syntax,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Promise.all([
+ d3.csv("movies.csv", d3.autoType),
+ d3.csv("stats.csv", d3.autoType),
+]).then(visualize)
+</code></pre></div>    </div>
+    <p>and we have updated our <code class="language-plaintext highlighter-rouge">make_scales</code> function to include <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code>
+  coordinate scales associated with the bar chart.</p>
+  </li>
+  <li>Now, when we create rectangles representing the legend elements, we can bind
+the associated genre counts.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#bars")
+  .selectAll("rect")
+  .data(stats).enter()
+  .append("rect")
+  ... attributes using scales
+</code></pre></div>    </div>
+    <p>The width of each bar is set using the total associated with each genre,</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>.attrs({
+  ...
+  width: d =&gt; scales.x2(d.n),
+  ...
+})
+</code></pre></div>    </div>
+  </li>
+  <li>At this point, we can use the same update function from our <a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-3/imdb-legend-click.js">earlier implementation</a> to toggle whether a movie should be highlighted or not.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  [selection defining the legend bars]
+  .on("click", (ev, d) =&gt; toggle_selection(ev, d.Genre))
+</code></pre></div></div>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

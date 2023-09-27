@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Enter, Update, Exit | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Enter, Update, Exit</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Modifying the DOM with data</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week5/week5-1">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week+5+-+1A+Enter%2C+Update%2C+Exit/1_zlg7rdsy">Recording</a></p>
+
+<ol>
+  <li>
+    <p>In interactive visualization, we often need to add or remove elements from
+the previous static view. Alternatively, we may choose to modify visual
+encodings to create an updated view emphasizing different characteristics of the
+data. Both tasks can be accomplished using D3’s enter-exit-update pattern. This
+pattern is so common that it is often called D3’s “general update pattern.”</p>
+  </li>
+  <li>
+    <p>The pattern operates on D3 selections that are already bound to data stored
+in an array. If we bind a new dataset to the same selection, there are two types
+of changes we need to account for,</p>
+
+    <ul>
+      <li>The number of array elements may no longer match the number of HTML tags.</li>
+      <li>The values stored in each array element might have changed, and we might need visual encodings to update to reflect those changed values.</li>
+    </ul>
+  </li>
+  <li>
+    <p>For the first issue, there are two functions that are helpful for resolving
+the discrepancy,</p>
+
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">.enter()</code> refers to the array elements that don’t have corresponding HTML
+tags. It is most often used to append new SVG objects to the original
+selection.</li>
+      <li><code class="language-plaintext highlighter-rouge">.exit()</code> refers to HTML tags that no longer have associated array elements.
+It is most often used to remove tags that are no longer needed (because the
+data has become smaller).</li>
+    </ul>
+  </li>
+  <li>
+    <p>Let’s tinker with these ideas in a more hands on example. First, I will bind
+a sequence of 10 numbers to a selection of circles and then append them to a
+parent SVG. The circles’ x-coordinates are determined by the number in the
+array. The <code class="language-plaintext highlighter-rouge">.enter()</code> is used to append these initial 10 array elements to the
+screen.</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  let circles = d3.range(10);
+
+  d3.select("svg")
+    .selectAll("circle")
+    .data(circles).enter()
+    .append("circle")
+    .attrs({
+      r: 10,
+      cx: d =&gt; (d + 1) * 50,
+      cy: 100,
+    })
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-1.html" width="800"></iframe>
+
+<ol>
+  <li>Now, suppose we add three additional elements to the circles array.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> circles = circles.concat([10, 11, 12])
+</code></pre></div>    </div>
+    <p>How can we add associated elements to the page without having to redraw
+ everything? We can rebind the data and use <code class="language-plaintext highlighter-rouge">.enter()</code> again. This time, when
+ we call <code class="language-plaintext highlighter-rouge">d3.select("svg").selectAll("circle")</code>, D3 recognizes the 10 circles
+ from before. But since the array now includes 13 elements, the <code class="language-plaintext highlighter-rouge">.enter()</code>
+ command realizes that there are potentially three new HTML elements that could
+ be drawn. These candidate elements are drawn using the <code class="language-plaintext highlighter-rouge">.append("circle")</code>
+ call,  and we’ve filled them in a different color, so you can see that it’s
+ not just redrawing circles for all 13 elements in the array.</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  d3.select("svg")
+    .selectAll("circle")
+    .data(circles).enter()
+    .append("circle")
+    .attrs({
+    	r: 10,
+    	cx: d =&gt; (d + 1) * 50,
+    	cy: 100,
+    	fill: "red"
+    })
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-2.html" width="800"></iframe>
+
+<ol>
+  <li>Similar logic works for exits. Suppose that instead of adding three elements,
+we had removed three.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> circles = circles.slice(3)
+</code></pre></div>    </div>
+
+    <p>Now, there are three more HTML circle elements than there are data entries in
+ the bound <code class="language-plaintext highlighter-rouge">circles</code> array. We can refer to the tags that no longer have data
+ bound to them using <code class="language-plaintext highlighter-rouge">.exit()</code>. The block below shades those points in blue.</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> d3.select("svg")
+   .selectAll("circle")
+   .data(circles).exit()
+   .attr("fill", "blue")
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-3.html" width="800"></iframe>
+
+<ol>
+  <li>
+    <p>Notice that the logic of <code class="language-plaintext highlighter-rouge">enter</code> and <code class="language-plaintext highlighter-rouge">exit</code> is tied closely with the indices
+of the arrays given to <code class="language-plaintext highlighter-rouge">.data()</code>. These functions simply check the lengths of
+arrays across data binds, always associating the first tag on the page with the
+first element in the array, the second tag with the second element, etc. In the
+future, we’ll see how to bind data using ID function rather than simply their
+index, but for the purpose of this visualization, plain indexing is sufficient.</p>
+  </li>
+  <li>
+    <p>The enter and exit patterns are commonly coupled with transitions, to allow
+for smoother fade in / out. For example,  we could first append them with radius
+0 and then increase their size following a transition.</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  circles = circles.concat([10, 11, 12])
+  d3.select("svg")
+    .selectAll("circle")
+    .data(circles).enter()
+    .append("circle")
+    .attrs({                  // append circles at
+          cx: d =&gt; (d + 1) * 50,  // right position, but
+          cy: 100,                // invisibly
+          r: 0,
+          fill: "red"
+    })
+    .transition()
+    .duration(2000)
+    .attr("r", 10)            // grow the circles
+</code></pre></div></div>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-4.html" width="800"></iframe>
+
+<ol>
+  <li>Alternatively, if we want to gradually shrink the circles before they
+disappear, we can change their radius attribute and then call <code class="language-plaintext highlighter-rouge">.remove()</code> to
+remove the tags from the DOM.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> circles = circles.slice(3)
+ d3.select("svg")
+   .selectAll("circle")
+   .data(circles).exit()
+   .transition()
+   .duration(4000)
+   .attr("r", 0)
+   .remove()
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-5.html" width="800"></iframe>
+
+<ol>
+  <li>What if want to change attributes for all tags, and not just those that were
+entered / exited? There are several strategies. The simplest is to reselect all
+matching items. For example, if we want all circles to be red, not just those
+that were entered, we could use</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  circles = circles.concat([10, 11, 12])
+  d3.select("svg")
+    .selectAll("circle")
+    .data(circles).enter()
+    .append("circle")
+    .attrs({
+      cx: d =&gt; (d + 1) * 50,
+      cy: 100,
+      r: 10,
+      fill: "red"
+    })
+
+  d3.select("svg")
+    .selectAll("circle")
+    .attr("fill", "red")
+</code></pre></div></div>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-6.html" width="800"></iframe>
+<p>but this is inefficient, because it will change attributes even for the
+  entered elements, which we already know have the correct attributes.</p>
+
+<ol>
+  <li>A more efficient alternative is to use <code class="language-plaintext highlighter-rouge">.join()</code> to distinguish between enter
+and update selections. Here, <code class="language-plaintext highlighter-rouge">.join()</code> is able to wrap <code class="language-plaintext highlighter-rouge">enter, exit,</code> and
+<code class="language-plaintext highlighter-rouge">update</code> selections, which refer to (i) new array elements that aren’t
+associated with tags, (ii) HTML elements which don’t have corresponding array
+elements, and (iii) HTML elements which have previously appended HTML elements.
+For example, in the code below, we’ve modified the <code class="language-plaintext highlighter-rouge">update</code> selection to blue
+while appending the new enter selection in <code class="language-plaintext highlighter-rouge">red</code>.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>circles = circles.concat([10, 11, 12])
+d3.select("svg")
+  .selectAll("circle")
+  .data(circles)
+  .join(
+   enter =&gt; enter.append("circle")
+     .attrs({
+       r: 10,
+       cx: d =&gt; (d + 1) * 50,
+       cy: 100,
+       fill: "red"
+     }),
+   update =&gt; update.attr("fill", "blue")
+ )
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-1/circleSequence-7.html" width="800"></iframe>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

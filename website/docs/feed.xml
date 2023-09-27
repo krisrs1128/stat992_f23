@@ -1,0 +1,1734 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="http://localhost:4000/stat992_f23/website/docs/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/stat992_f23/website/docs/" rel="alternate" type="text/html" /><updated>2023-08-15T14:01:15-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/feed.xml</id><title type="html">Statistical Data Visualization</title><subtitle>These are notes from STAT 992 (Fall 2022) at UW Madison.</subtitle><entry><title type="html">Visualizing Distributions</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week13-2.html" rel="alternate" type="text/html" title="Visualizing Distributions" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week13-2</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week13-2.html"><![CDATA[<p><em>Uncertainty through distributions</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week13-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2013%20-%202%3A%20Visualizing%20Distributions/1_g1fbf4yy">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(ggdist)
+library(distributional)
+library(patchwork)
+theme_set(theme_bw())
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>In the last notes, we recommended frequency framing plots as a
+default approach for visualizing uncertainty. If you have ever
+skimmed through scientific publications, though, you might have been
+surprised by this choice — in technical literature, the overwhelming
+majority of uncertainty visualizations are based on error bars.</p>
+  </li>
+  <li>
+    <p>In many of these publications, frequency framing would likely be
+prefereable, because they give a richer view of the distribution of
+possible outcomes. However, there are two scenarios where error bars
+are hard to beat: when we need to compactly represent uncertainty
+for many units and when we want to combine them with other plots.</p>
+  </li>
+  <li>
+    <p>Since error bars take up so little space, they can be included in
+highly information dense views. For example, the intervals cover 66,
+90, and 95% of the central area for each of 10 normal distributions.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>n &lt;- 10
+estimate &lt;- tibble(id = seq_len(n), mean = rnorm(n), sd = rgamma(n, 4, 12))
+ggplot(estimate) +
+  geom_errorbarh(aes(mean, id, xmin = mean - 1.9 * sd, xmax = mean + 1.9 * sd))  +
+  labs(title = "95% Confidence Intervals (Randomly Generated)")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-3-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Since they are so compact, it is relatively easy to incorporate
+error bars into other visualizations. For example, we can replace
+points in a scatterplot with crosses that summarize uncertainty in
+each dimension.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>points &lt;- tibble(
+  x = rnorm(n),
+  y = rnorm(n),
+  sd_x = rgamma(n, 3, 24),
+  sd_y = rgamma(n, 3, 24)
+)
+
+ggplot(points, aes(x, y)) +
+  geom_errorbar(aes(ymin = y - 1.9 * sd_y, ymax = y + 1.9 * sd_y)) +
+  geom_errorbarh(aes(xmin = x - 1.9 * sd_x, xmax = x + 1.9 * sd_x)) +
+  coord_fixed() +
+  labs(title = "95% Error Bars")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-4-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>One difficulty with error bars is that their interpretations are not
+self-evident from their appearance — they need to be included in the
+title or caption to the figure. For example, 90 and 99% confidence
+intervals have different meanings, and this needs to be explained
+clearly.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>level_compare &lt;- tibble(mean = rnorm(1), sd = rexp(1), level = c(0.66, 0.9, 0.95, 0.99)) %&gt;%
+  mutate(
+    scaling = qnorm(level + 0.5 * (1 - level)),
+    lower = mean - scaling * sd,
+    upper = mean + scaling * sd
+  )
+
+ggplot(level_compare) +
+  geom_errorbarh(aes(mean, as.factor(level), xmin = lower, xmax = upper)) +
+  labs(x = "CI for Mean", y = "Significance Level")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-5-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>A variation on error bars that pack a little more information in
+nearly as little space is the graded error bar. This is a type of
+error bar where different levels of thickness are matched with
+different interpretations. In the example below, we are
+simultaneously showing 90, 95, and 99% confidence intervals for a
+mean.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(estimate) +
+  stat_pointinterval(aes(xdist = dist_normal(mean, sd), y = id)) +
+  labs(title = "Graded CIs (66 and 95%)")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-6-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>These graded error bars can be combined with distribution plots to
+create eye or half-eye plots. This approach benefits from the
+advantages of both the distribution and graded error approaches.
+From the distribution component, we can see the full distribution of
+uncertainty, not simply summaries. Using the error bar, we can tell
+whether specific values are above or below important cutoffs.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p1 &lt;- ggplot(estimate) +
+  stat_halfeye(aes(xdist = dist_normal(mean, sd), y = id)) +
+  labs(title = "Half Eye Plot")
+
+p2 &lt;- ggplot(estimate) +
+  stat_dotsinterval(aes(xdist = dist_normal(mean, sd), y = id)) +
+  labs(title = "Dot Interval Plot")
+
+p1 + p2
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>A related approach is to fill in subsets of a distribution plot
+according to more interpretable cutoffs.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(estimate) +
+  stat_halfeye(aes(xdist = dist_normal(mean, sd), y = id, fill = stat(level)), .width = c(0.66, 0.9, 0.95)) +
+  scale_fill_brewer(na.value = "#f7f7f7")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-8-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Two other encodings are worth knowing, but are harder to fit into
+the rest of this discussion. In interval plots, the fill opacity is
+used to encode probability. It is harder to evaluate the exact
+probability values, but it is a very compact representation.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p1 &lt;- ggplot(estimate) +
+  stat_interval(
+    aes(xdist = dist_normal(mean, sd), y = id, color_ramp = stat(level)), 
+    .width = c(0.66, 0.9, 0.95),
+    col = "#64798C"
+  )
+
+p2 &lt;- ggplot(estimate) +
+  stat_gradientinterval(
+    aes(xdist = dist_normal(mean, sd), y = id),
+    fill_type = "segments",
+    col = "#64798C"
+  )
+
+p1 + p2
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-9-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>A second encoding is the complementary cumulative distribution
+(CCDF) plot. It represents the probability that the data will lie
+above a particular value. Some studies have found that nontechnical
+audiences often have better inferences when they are presented
+distributional uncertainty via CCDFs.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(estimate) +
+  stat_ccdfinterval(
+    aes(xdist = dist_normal(mean, sd), y = id),
+    col = "#64798C",
+    fill = "#d4dae0"
+  ) +
+  scale_x_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-10-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>All the examples we’ve worked with in these notes have used the
+means and standard deviations from hypothetical normal
+distributions. However, they can all be created using the data
+itself. For example, here are <code class="language-plaintext highlighter-rouge">point_interval</code> and <code class="language-plaintext highlighter-rouge">slab_eye</code>
+intervals for a dataset <code class="language-plaintext highlighter-rouge">random_draws</code> where we draw 100 samples
+from 10 different gamma distributions.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>random_draws &lt;- map_dfr(
+  1:10, 
+  ~ tibble(x = rgamma(1000, runif(1, 2, 8), runif(1, 5, 10))),
+  .id = "id"
+)
+
+p1 &lt;- ggplot(random_draws) +
+  stat_pointinterval(aes(x, id))
+
+p2 &lt;- ggplot(random_draws) +
+  stat_halfeye(aes(x, id, fill = stat(level))) +
+  scale_fill_brewer(na.value = "#f7f7f7")
+
+p1 + p2
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-2/unnamed-chunk-11-1.png" alt="" /></p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Uncertainty through distributions]]></summary></entry><entry><title type="html">Structured Graphs</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-1.html" rel="alternate" type="text/html" title="Structured Graphs" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-1</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-1.html"><![CDATA[<p><em>Representing known structure in graphs</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week10-1.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20-%201%3A%20Structured%20Graphs/1_fafxe09y">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Graph layouts can often benefit from additional information known
+about the structure of the graph or purpose of the visualization.
+These notes describe a few of the situations that arise most
+frequently in practice.</p>
+  </li>
+  <li>
+    <p>When there is no additional structure / specific purpose, a
+reasonable default for node-link diagrams uses force-directed
+layout, as discussed previously. In this layout, we think of nodes
+as particles that want to repel one another, but which are tied
+together by elastic edges.</p>
+  </li>
+  <li>
+    <p>One common situation where we can go beyond force-directed graphs is
+when we have additional information about the nodes that can be used
+to constrain their position. For example, the Royal Constellations
+visualization, attempts to visualize the family trees of royal
+families. On the y-axis, the nodes are constrained to be sorted by
+year, and across the x-axis, nodes are constrained according to the
+country of the royal family.</p>
+
+    <iframe src="https://royalconstellations.visualcinnamon.com/" width="800" height="500"></iframe>
+  </li>
+  <li>
+    <p>More generally, we can define x and y-axis constraints and then use
+a force-directed algorithm to layout the nodes, subject to those
+constraints. These can be implemented by combining D3 with the <a href="https://ialab.it.monash.edu/webcola/">cola
+library</a>. For example, we’ve
+simulated data that are known to fall into three tight clusters, but
+using a naive force-directed layout leads to clusters that cross one
+another.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/cola-example.html" data-external="1" height="400" width="500"></iframe>
+  </li>
+  <li>
+    <p>To resolve this, we can explicitly tell the layout algorithm to
+constrain the x-coordinates for nodes within each cluster.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/cola-example-2.html" data-external="1" height="400" width="500"></iframe>
+
+    <p>To accomplish this, we defined an array of objects specifying pixel
+constraints between pairs of nodes; e.g.,
+<code class="language-plaintext highlighter-rouge">{"axis":"y", "left":0, "right":1,  "gap":25}</code> says that node 1
+should be (at least) 25 pixels above node 0.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let constrained = cola.d3adaptor()
+  .nodes(nodes)
+  .links(links)
+  .constraints(constraints)
+  .groups(groups)
+  .start()
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Another common situation is that the nodes can be organized into a
+hierarchy of subgraphs. That is, nodes can be partitioned into
+non-overlapping sets. These sets can themselves be merged together
+to define a coarser partition.</p>
+  </li>
+  <li>
+    <p>This hierarchical structure can be encoded in either node-link or
+adjacency matrix visualizations. For example, in node-link views, we
+can draw shapes enclosing the sets,</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/graph-hierarchy.png" width="350" style="display: block; margin: auto;" /></p>
+
+    <p>and in adjacency matrices, we can draw trees specifying the
+hierarchy.</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/matlink.png" width="200" style="display: block; margin: auto;" />
+Here is an example implementation, again using <a href="https://ialab.it.monash.edu/webcola/examples/smallgroups.html">the Cola
+library</a>.
+Notice how nodes across groups always remain separated from one
+another.</p>
+
+    <iframe src="https://ialab.it.monash.edu/webcola/examples/smallgroups.html" data-external="1" height="350" width="700"></iframe>
+  </li>
+  <li>
+    <p>Here is a simplified implementation that draws a boundary around
+groups of nodes without the help of the cola library. In addition to
+drawing nodes and links, it adds (and fills in) paths that contain
+the separate sets.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/miserables-group.html" data-external="1" height="400" width="500"></iframe>
+  </li>
+  <li>
+    <p>Specifically, each time the <code class="language-plaintext highlighter-rouge">d3.force()</code> simulation ticks, it
+calculates the convex hull of the set of nodes within each group
+using <code class="language-plaintext highlighter-rouge">convex_hull()</code>, which is a light wrapper we have prepared
+around the existing <a href="https://observablehq.com/@d3/d3-polygonhull"><code class="language-plaintext highlighter-rouge">d3.polygonHull</code>
+function</a>. This returns
+an array of <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> coordinates for the group boundary. This is
+then use to draw a path that loops in on itself. We fill in the
+loops according to which group number it corresponds to.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#hulls")
+  .selectAll("path")
+  .data(convex_hull(nodes))
+  .attrs({
+    d: path_generator,
+    fill: (d, i) =&gt; scales.fill(i)
+  })
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>In some graphs, we have clustering structure. Within each cluster,
+nodes are densely connected, but between clusters, there are only a
+few links. In this case, it’s natural to use adjacency matrices to
+visualize the clusters and then draw links for connections between
+adjacency matrices. The reasoning is that adjacency matrices are
+better suited in densely connected graphs (they don’t have the edge
+crossing problem) but node-link encodings are better when we want to
+follow longer paths across clusters. Below, I’ve included a
+screenshot from the paper that introduced this layout approach,</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/NodeTrix.png" width="767" style="display: block; margin: auto;" /></p>
+
+    <p>Though it would be a nontrivial implementation, I hope you can at
+least get a rough idea about how we could begin to implement
+something like this using D3. We already know how to draw adjacency
+matrices as collections of appended rectangles. We could imagine
+appending each of these rectangles to separate group elements. If we
+knew the links between groups, we could run a <code class="language-plaintext highlighter-rouge">d3.force()</code>
+simulation to arrange groups in a nice layout. We could then append
+lines between the groups (or, if we want to more completely emulate
+the smooth links of figure, we could try a kind of <a href="https://github.com/d3/d3-shape/blob/main/README.md">curve or link
+generator</a>).</p>
+  </li>
+  <li>
+    <p>This is just one example of a larger class of “hybrid” matrix
+encodings. It’s possible to solve a variety of visual problems, just
+by cleverly combining the elementary visual encodings discussed last
+week.</p>
+  </li>
+  <li>
+    <p>So far, we have focused on high-level properties of the graph that
+can be accounted for in visualization. Sometimes, the intended
+function of the visualization warrants thinking at a low-level
+instead. For example, in many problems, we are interested in
+studying ego-networks — the small neighborhoods that surround
+specific nodes of interest.</p>
+  </li>
+  <li>
+    <p>One example of a layout that was designed to support ego-network
+visualization is the egoCompare system. This is a kind of overview +
+detail graph visualization where users can select pairs of nodes to
+compare within an overview graph. The 2-nearest-neighbor graphs for
+each of these selected nodes are then shown (and linked together, if
+applicable). The subgraphs are arranged in a way that minimizes the
+amount of crossing.</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/ego_compare.jpeg" width="1907" style="display: block; margin: auto;" /></p>
+  </li>
+  <li>
+    <p>The last type of graph we’ll consider in these notes are dynamic
+graphs. These are graphs where the sets of nodes and links are
+evolving over time. For example, the interactions between proteins
+in a protein interaction network may change when a cell is exposed
+to environmental stress, like the presence of a virus. There is no
+single way to visualize these networks, but common strategies
+include use of animation, faceting over time, combined encodings
+(like time series within nodes), or dynamic linking between
+coordinated views.</p>
+  </li>
+  <li>
+    <p>For example, here is an animated view of conflicts between countries
+over time,</p>
+
+    <iframe width="100%" height="500" frameborder="0" src="https://observablehq.com/embed/@yaslena/dynamic-network-graph?cells=viewof+time%2Cchart"></iframe>
+
+    <p>and here is a combined encoding of time series arranged along a
+graph, from the pathvis paper.</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/pathvis.png" width="350" style="display: block; margin: auto;" /></p>
+  </li>
+  <li>
+    <p>In these notes, we’ve see some academic literature on visualization.
+Even if you are more practically oriented, this literature can be
+worth being familiar, if only because it can be a treasure trove of
+visual problem solving devices.</p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Representing known structure in graphs]]></summary></entry><entry><title type="html">Graph Interactivity I</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-2.html" rel="alternate" type="text/html" title="Graph Interactivity I" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-2</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-2.html"><![CDATA[<p><em>View interaction in graphs</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week10-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20-%202%3A%20Graph%20Interactivity%20I/1_ifn5dvu8">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Interactivity makes it possible to tinker with different views of a
+graph and get immediate feedback. By exploring a sequence of views,
+it can be possible to build a holistic understanding of even very
+complex graphs.</p>
+  </li>
+  <li>
+    <p>It’s helpful to think of graph interaction as falling into three
+categories, though the boundaries can often be fuzzy. From most
+superficial to most substantive, these are,</p>
+
+    <ul>
+      <li>View interactivity: For a fixed mapping from data to visual
+marks, we alter the user’s view so that different regions become
+easier to study.</li>
+      <li>Encoding interactivity: We can change the visual encodings of a
+fixed collection of data based on user queries.</li>
+      <li>Data interactivity: We can allow the user to manipulate the data
+that appear in any given graph. In these notes, we’ll consider a
+few examples of view interactivity. Later, we’ll discuss
+encoding and data interactivity.</li>
+    </ul>
+  </li>
+  <li>
+    <p>A simple form of view interactivity is panning and zooming.
+Together, they can be used to change the center and extent of the
+user’s field of view. Even though these operations don’t require any
+complex redrawing of the graph, they allow a simple form of
+overview + detail interactivity. We can zoom out to view the overall
+graph and then pan and zoom to specific neighborhoods of interest.</p>
+  </li>
+  <li>
+    <p>In D3, panning and zooming can be implemented using <code class="language-plaintext highlighter-rouge">d3.zoom()</code>.
+This are used to construct functions that can then be called on <code class="language-plaintext highlighter-rouge">g</code>
+elements containing the objects to pan and zoom over (conceptually,
+this is similar to <code class="language-plaintext highlighter-rouge">d3.brush()</code>). The <code class="language-plaintext highlighter-rouge">scaleExtent()</code> method
+specifies the maximum and minimum zoom levels. For example, to pan
+and zoom over a simple set of circles, we can use this block,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let zoom = d3.zoom()
+  .scaleExtent([1, 10])
+  .on("zoom", zoom_fun)
+d3.select("svg").call(zoom)
+
+function zoom_fun(ev) {
+  d3.select("svg").attr("transform", ev.transform);
+}
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/pan-zoom.html" data-external="1" height="450" width="600"></iframe>
+  </li>
+  <li>
+    <p>A related behavior comes from <code class="language-plaintext highlighter-rouge">d3.drag()</code>. This allows us to move
+elements every time the user clicks on one and then moves the mouse.
+In this case, the drag function selects the current circle and
+changes its <code class="language-plaintext highlighter-rouge">cx</code> and <code class="language-plaintext highlighter-rouge">cy</code> coordinates to wherever the user drags it
+(stored in the event variable <code class="language-plaintext highlighter-rouge">ev</code>).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let drag = d3.drag()
+  .on("drag", drag_fun)
+d3.select("svg")
+  .selectAll("circle")
+  .call(drag)
+
+function drag_fun(ev) {
+  d3.select(this)
+    .attrs({
+      cx: d =&gt; ev.x,
+      cy: d =&gt; ev.y,
+    })
+}
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/drag.html" data-external="1" height="200" width="200"></iframe>
+  </li>
+  <li>
+    <p>Application to the graph context works similarly. Here is an example
+where we can pan and zoom across a node-link diagram (can you think
+of how to do this for an adjacency matrix view?). We’ve also used
+<code class="language-plaintext highlighter-rouge">d3.drag()</code> to move the nodes. Note that when the node’s position
+changes, it updates the forces in the simulation, and other nodes
+get dragged along.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-2/miserables-zoom.html" data-external="1" height="450" width="600"></iframe>
+  </li>
+  <li>
+    <p>There are more subtle forms of view interactivity. One interesting
+example discussed in the reading for this week is “edge lensing.”
+This type of interaction is designed to solve the problem of highly
+overlapping edges in dense regions of the graph. For example,
+suppose we want to identify the neighbors of a node that lies in the
+core of the graph. Since it lies in a dense region, there is a good
+chance that many links cross over it, even if they are not direct
+neighbors.</p>
+  </li>
+  <li>
+    <p>The idea of the edge lens interaction is to create a “lens” that
+hides edges that are not directly relevant to the queried region.
+For example, this removes long-range interactions between nodes far
+from the lens.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-2/miserables-lens.html" data-external="1" height="450" width="600"></iframe>
+  </li>
+  <li>
+    <p>We can implement a simple version of this in D3. We can easily draw
+a lens by asking a circle to follow our mouse using a mousemove
+interaction. Specifically, we append a circle,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#lens")
+  .append("circle")
+  .attrs({
+    r: lens_radius,
+    fill: "white",
+    ...
+  })
+</code></pre></div>    </div>
+
+    <p>and whenever the mouse moves, we call a function that will update
+the display.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#overall")
+  .on("mousemove", e =&gt; move_lens(e, nodes, links))
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>In this <code class="language-plaintext highlighter-rouge">move_lens</code> function, we both move the circle defining the
+lens and find all the nodes that are contained within the lens. In
+the updated view, we redraw edges for just that subset of nodes –
+this subset of edges is stored in the <code class="language-plaintext highlighter-rouge">links_</code> object below.
+Specifically, we’ve created a <code class="language-plaintext highlighter-rouge">#local_links</code> group element
+containing lines associated with just those edges in the local
+neighborhoods. By making sure that these edges lie above the lens,
+we create the illusion that the other edges have been erased.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let links_ = local_links(event, nodes, links)
+let sel = d3.select("#local_links")
+  .selectAll("line")
+  .data(links_, d =&gt; d.index)
+
+sel.enter()
+  .append("line")
+  .attrs({
+    x1: d =&gt; d.source.x,
+    y1: d =&gt; d.source.y,
+    x2: d =&gt; d.target.x,
+    y2: d =&gt; d.target.y
+  })
+
+sel.exit().remove()
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>This is not the most efficient implementation, since we draw the
+edges within the lens twice (both above and below the lens). In
+principle, we could compute the edge / lens intersections and change
+the line endpoints as we move. However, the resulting code would be
+harder to understand, and except in the most compute-constrained
+environments, we should prefer readable implementations (this is in
+the spirit of “premature optimization is the root of all evil”).</p>
+  </li>
+  <li>
+    <p>There are a few other forms of lens-based view interactions. A
+variant of edge lenses brings all of a node’s neighbors into the
+currently hovered view. Fisheye lens are used to distort the view so
+that the lensed area gets expanded. The user’s past history of
+inputs can be used to define an “interest” function over regions of
+the graph, and areas considered more interesting can be expanded to
+take up more space in the layout.</p>
+
+    <iframe width="100%" height="350" frameborder="0" src="https://observablehq.com/embed/@maliky/force-directed-graph-a-to-z?cells=chart5"></iframe>
+  </li>
+  <li>
+    <p>None of these approaches directly change the graph data (Data
+Interactivity) or their encodings (Encoding Interactivity). In the
+next set of notes, we’ll consider these more substantive
+interactions.</p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[View interaction in graphs]]></summary></entry><entry><title type="html">Graph Interactivity II</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-3.html" rel="alternate" type="text/html" title="Graph Interactivity II" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-3</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week10-3.html"><![CDATA[<p><em>Encoding and data interaction in graphs</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week10-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20-%203%3A%20Graph%20Interactivity%20II/1_zbx9zb6t">Recording</a></p>
+
+<ol>
+  <li>
+    <p>These notes continue our tour of graph interactivity. We’ll explore
+how certain graph queries can be more easily answered by allowing
+users to modify visual encodings (Encoding Interactivity) and the
+form of the data that are displayed (Data Interactivity).</p>
+  </li>
+  <li>
+    <p>Let’s begin with encoding interactivity. One simple example of this
+type of interactivity is highlighting. This changes the visual
+appearance of different nodes or edges based on user interest. For
+example, in either node link or adjacency matrix views, we can
+highlight one-step neighborhoods based on the position of the user’s
+mouse. For example, here is an example for node-link views,</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/highschool-hover.html" data-external="1" height="450" width="600"></iframe>
+
+    <p>and here is one for adjacency matrix views,</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-1/miserables-adj-neighbors.html" data-external="1" height="450" width="600"></iframe>
+  </li>
+  <li>
+    <p>In both of these examples, we first build a data structure
+containing the neighbors of each node in the graph. For example the
+array following <code class="language-plaintext highlighter-rouge">0:</code> gives the indices of all nodes that are
+neighbors with node <code class="language-plaintext highlighter-rouge">0</code>,</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/neighbors-js.png" width="350" style="display: block; margin: auto;" /></p>
+
+    <p>Once we have this data structure, we can quickly look up neighbors
+every time we hover over a node (or matrix tile in the adjacency
+matrix view). We then update the graphical marks to reflect these
+neighborhoods. In the node-link view, we highlight the neighbors in
+red using the following update,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#nodes")
+  .selectAll("circle")
+  .attrs({
+    fill: d =&gt; neighbors[ix].indexOf(d.index) == -1 ? "black" : "red"
+  })
+</code></pre></div>    </div>
+
+    <p>and similarly, for the adjacency matrix visualization, we change the
+x-label font size and opacity using this so that only the neighbors
+are visible,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#xlabels")
+  .selectAll("text")
+  .attrs({
+    "font-size": d =&gt; d.index == target? 14 : 10,
+    "opacity": d =&gt; neighbors[source].indexOf(d.index) == -1? 0 : 1
+  })
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Conceptually, there is nothing unique about this interactivity code,
+compared to what we already have used for more basic plots (e.g.,
+for scatterplots), and many of the techniques we learned earlier
+apply here. For example, if want to allow the user to select a node
+without placing their mouse directly over it, we can adapt the
+Delaunay lookups that we have <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-3.html">previously
+used</a>
+in scatterplot interaction. Here is an implementation of this idea
+by Alex Macy,</p>
+
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/_8jeKfFnPvk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+  </li>
+  <li>
+    <p>Brushing and linking is often used for encoding interactivity.
+Properly coordinated views can be used to highlight nodes or edges
+with a particular property. For example, suppose we wanted to a
+simple way of highlighting all the hubs in a network (i.e., nodes
+with many neighbors). One idea is to link a histogram of node
+degrees with the actual node-link diagram. In principle, we could
+modify a variety of node and edge attributes based on user
+interactions (size, color, line type, …).</p>
+  </li>
+  <li>
+    <p>Next, let’s consider data interactions. Two common types of data
+interactions are user-guided filtering and aggregation. In
+filtering, we remove data from view — this can be determined by UI
+inputs, dynamic queries, or direct manipulation of marks on the
+screen. For example, here we filter edges based on their
+edge-betweeness-centrality (a measure of how many paths go through
+that edge). This is helpful for isolating the “backbone” of the
+network.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week10/week10-3/interactome-2.html" data-external="1" height="450" width="600"></iframe>
+  </li>
+  <li>
+    <p>To implement this view, we use the standard enter-update-exit
+pattern. We used the brush selection to change the subset of edges
+that should be bound to the SVG lines defining the links. We had
+precomputed the edge centralities in advance, so updating the
+displayed marks is simply a matter of determining which edge array
+elements to display.</p>
+  </li>
+  <li>
+    <p>Pruning reduces the number of marks on the display by removing some.
+In contrast, aggregation reduces the number of marks by collapsing
+many into a few. One approach to aggregation is to clump tightly
+connected clusters of nodes into metanodes. This is a special case
+of “semantic zooming” — instead of simply resizing a static
+collection of elements, semantic zooming modifies the elements that
+are shown so that additional details are shown on demand.</p>
+  </li>
+  <li>
+    <p>For example, a semantic zoom with two zoom levels would allow the
+user to collapse and expand metanodes based on user interest. Here
+is an implementation by @rymarchikbot. The construction of the
+enclosing paths is similar to our <code class="language-plaintext highlighter-rouge">convex_hull</code>-based compound graph
+visualization from the first set of notes for this week.</p>
+
+    <iframe width="100%" height="500" frameborder="0" src="https://observablehq.com/embed/@rymarchikbot/d3-js-force-layout-click-to-group-bundle-nodes?cell=*"></iframe>
+  </li>
+  <li>
+    <p>Both filtering and aggregation work by refocusing our attention on
+graph structures, either from the top down (removing less
+interesting elements) or from the bottom up (combining similar
+ones). An intermediate strategy is based on graph navigation.</p>
+  </li>
+  <li>
+    <p>The main idea of graph navigation is to start zoomed in, with only a
+small part of the graph visible. Then, based on user interest, we
+can visually signal those directions of the graph that are
+especially worth moving towards. Concretely, it is possible to
+define a degree-of-interest function across the collection of nodes,
+as formalized by <a href="https://dig.cmu.edu/publications/2009-doigraphs.html">(Van Ham and Perer
+2009)</a>. This
+function can update based on user inputs. The encoding of the graph
+can then be modified to suggest that certain regions be focused in
+on.</p>
+
+    <p><img src="/stat679_notes/assets/week10-1/2009-doigraphs.png" width="350" style="display: block; margin: auto;" /></p>
+  </li>
+  <li>
+    <p>Note that this is different from the overview-plus-detail principle
+that we have used in many places. It is helpful when attempting to
+overview the entire network may not be necessary and exploring local
+neighborhoods is enough to answer most questions.</p>
+  </li>
+  <li>
+    <p>Together, view, encoding, and data interaction provide a rich set of
+techniques for exploring graph data. Moreover, many of the
+techniques we described here are still areas of active research, and
+perhaps in the future, it will be easier to design and implement
+graph interactions suited to specific problems of interest.</p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Encoding and data interaction in graphs]]></summary></entry><entry><title type="html">Goals of Dimensionality Reduction</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-1.html" rel="alternate" type="text/html" title="Goals of Dimensionality Reduction" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-1</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-1.html"><![CDATA[<p><em>When is dimensionality reduction helpful?</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week11/week11-1.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20%5B1%5D%20Introduction%20to%20Dimensionality%20Reduction/1_z4difn4d">Recording</a></p>
+
+<ol>
+  <li>
+    <p>High-dimensional data are data where many features are collected for
+each observation. These tend to be wide datasets with many columns.
+The name comes from the fact that each row of the dataset can be
+viewed as a vector in a high-dimensional space (one dimension for
+each feature). These data are common in modern applications,</p>
+
+    <ul>
+      <li>Each cell in a genomics dataset might have measurements for
+hundreds of molecules.</li>
+      <li>Each survey respondent might provide answers to dozens of
+questions.</li>
+      <li>Each image might have several thousand pixels.</li>
+      <li>Each document might have counts across several thousand relevant
+words.</li>
+    </ul>
+  </li>
+  <li>
+    <p>For example, consider the Metropolitan Museum of Art dataset, which
+contains images of many artworks. Abstractly, each artwork is a
+high-dimensional object, containing pixel intensities across many
+pixels. But it is reasonable to derive a feature based on the
+average brightness.</p>
+
+    <p><img src="/stat679_notes/assets/week11-1/metropolitan-1.png" alt="An arrangement of artworks according to their average pixel brightness, as given in the _The Beginner's Guide to Dimensionality Reduction_." width="484" /></p>
+    <p class="caption">
+An arrangement of artworks according to their average pixel
+brightness, as given in the *The Beginner’s Guide to Dimensionality
+Reduction*.
+</p>
+  </li>
+  <li>
+    <p>In general, manual feature construction can be difficult.
+Algorithmic approaches try streamline the process of generating
+these maps by optimizing some more generic criterion. Different
+algorithms use different criteria, which we will review in the next
+couple of lectures.</p>
+
+    <p><img src="/stat679_notes/assets/week11-1/metropolitan-2.gif" alt="The dimensionality reduction algorithm in this animation converts a large number of raw features into a position on a one-dimensional axis defined by average pixel brightness. In general, we might reduce to dimensions other than 1D, and we will often want to define features tailored to the dataset at hand." /></p>
+    <p class="caption">
+The dimensionality reduction algorithm in this animation converts a
+large number of raw features into a position on a one-dimensional
+axis defined by average pixel brightness. In general, we might
+reduce to dimensions other than 1D, and we will often want to define
+features tailored to the dataset at hand.
+</p>
+  </li>
+  <li>
+    <p>Informally, the goal of dimensionality reduction techniques is to
+produce a low-dimensional “atlas” relating members of a collection
+of complex objects. Samples that are similar to one another in the
+high-dimensional space should be placed near one another in the
+low-dimensional view. For example, we might want to make an atlas of
+artworks, with similar styles and historical periods being placed
+near to one another.</p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[When is dimensionality reduction helpful?]]></summary></entry><entry><title type="html">Principal Components Analysis</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-2.html" rel="alternate" type="text/html" title="Principal Components Analysis" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-2</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-2.html"><![CDATA[<p><em>Linear dimensionality reduction with PCA</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week11/week11-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20%5B3%5D%20Principal%20Components%20Analysis%20II/1_uows5d33">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(tidymodels)
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>For low-dimensional data, we could visually encode all the features
+in our data directly, either using properties of marks or through
+faceting. In high-dimensional data, this is no longer possible.
+However, though there are many features associated with each
+observation, it may still be possible to organize samples across a
+smaller number of meaningful, derived features. In the next week,
+we’ll explore a few ways of partially automating the search for
+relevant features.</p>
+  </li>
+  <li>
+    <p>An important special case for dimensionality reduction emerges when
+we make the following assumptions about the set of derived features,</p>
+
+    <ul>
+      <li>Features that are linear combinations of the raw input columns.</li>
+      <li>Features that are orthogonal to one another.</li>
+      <li>Features that have high variance.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Why would we want features to have these properties?</p>
+
+    <ul>
+      <li>Restricting to linear combinations allows for an analytical
+solution. We will relax this requirement when discussing UMAP.</li>
+      <li>Orthogonality means that the derived features will be
+uncorrelated with one another. This is a nice property, because
+it would be wasteful if features were redundant.</li>
+      <li>High variance is desirable because it means we preserve more of
+the essential structure of the underlying data. For example, if
+you look at this 2D representation of a 3D object, it’s hard to
+tell what it is,</li>
+    </ul>
+
+    <p><img src="/stat679_notes/assets/week11-2/CAM3.png" alt="What is this object?" width="50" /></p>
+    <p class="caption">
+What is this object?
+</p>
+  </li>
+  <li>
+    <p>But when viewing an alternative reduction which has higher variance…</p>
+
+    <p><img src="/stat679_notes/assets/week11-2/CAM4.png" alt="Not so complicated now. Credit for this example goes to Professor Julie Josse, at Ecole Polytechnique." width="100" /></p>
+    <p class="caption">
+Not so complicated now. Credit for this example goes to Professor
+Julie Josse, at Ecole Polytechnique.
+</p>
+  </li>
+  <li>
+    <p>Principal Components Analysis (PCA) is the optimal dimensionality
+reduction under these three restrictions, in the sense that it finds
+derived features with the highest variance. Formally, PCA finds a
+matrix <em>Φ</em> ∈ ℝ<sup><em>D</em> × <em>K</em></sup> and a set of vectors
+<em>z</em><sub><em>i</em></sub> ∈ ℝ<sup><em>K</em></sup> such that
+<em>x</em><sub><em>i</em></sub> = <em>Φ**z</em><sub><em>i</em></sub> for all <em>i</em>. The columns of
+<em>Φ</em> are called principal components, and they specify the structure
+of the derived linear features. The vector <em>z</em><sub><em>i</em></sub> is
+called the score of <em>x</em><sub><em>i</em></sub> with respect to these
+components. The top component explains the most variance, the second
+captures the next most, and so on. Geometrically, the columns of <em>Φ</em>
+span a plane that approximates the data. The <em>z</em><sub><em>i</em></sub>
+provide coordinates of points projected onto this plane.</p>
+
+    <p><img src="/stat679_notes/assets/week11-2/pca_approx.png" alt="Figure 3: PCA finds a low-dimensional linear subspace that closely approximates the high-dimensional data." width="778" /></p>
+    <p class="caption">
+Figure 3: PCA finds a low-dimensional linear subspace that closely
+approximates the high-dimensional data.
+</p>
+  </li>
+  <li>
+    <p>In R, PCA can be conveniently implemented using the tidymodels
+package. The dataset below contains properties of a variety of
+cocktails, from the Boston Bartender’s guide. The first two columns
+are qualitative descriptors, while the rest give numerical
+ingredient information.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cocktails_df &lt;- read_csv("https://uwmadison.box.com/shared/static/qyqof2512qsek8fpnkqqiw3p1jb77acf.csv")
+cocktails_df[, 1:6]
+
+## # A tibble: 937 × 6
+##    name                 category              light_rum lemon_…¹ lime_…² sweet…³
+##    &lt;chr&gt;                &lt;chr&gt;                     &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+##  1 Gauguin              Cocktail Classics          2        1       1        0  
+##  2 Fort Lauderdale      Cocktail Classics          1.5      0       0.25     0.5
+##  3 Cuban Cocktail No. 1 Cocktail Classics          2        0       0.5      0  
+##  4 Cool Carlos          Cocktail Classics          0        0       0        0  
+##  5 John Collins         Whiskies                   0        1       0        0  
+##  6 Cherry Rum           Cocktail Classics          1.25     0       0        0  
+##  7 Casa Blanca          Cocktail Classics          2        0       1.5      0  
+##  8 Caribbean Champagne  Cocktail Classics          0.5      0       0        0  
+##  9 Amber Amour          Cordials and Liqueurs      0        0.25    0        0  
+## 10 The Joe Lewis        Whiskies                   0        0.5     0        0  
+## # … with 927 more rows, and abbreviated variable names ¹​lemon_juice,
+## #   ²​lime_juice, ³​sweet_vermouth
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>The <code class="language-plaintext highlighter-rouge">pca_rec</code> object below defines a tidymodels recipe for
+performing PCA. Computation of the lower-dimensional representation
+is deferred until <code class="language-plaintext highlighter-rouge">prep()</code> is called. This delineation between
+workflow definition and execution helps clarify the overall
+workflow, and it is typical of the tidymodels package.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pca_rec &lt;- recipe(~., data = cocktails_df) %&gt;%
+  update_role(name, category, new_role = "id") %&gt;%
+  step_normalize(all_predictors()) %&gt;%
+  step_pca(all_predictors())
+
+pca_prep &lt;- prep(pca_rec)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We can tidy each element of the workflow object. Since PCA was the
+second step in the workflow, the PCA components can be obtained by
+calling tidy with the argument “2.” The scores of each sample with
+respect to these components can be extracted using <code class="language-plaintext highlighter-rouge">juice</code>. The
+amount of variance explained by each dimension is also given by
+tidy, but with the argument <code class="language-plaintext highlighter-rouge">type = "variance"</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tidy(pca_prep, 2)
+
+## # A tibble: 1,600 × 4
+##    terms             value component id       
+##    &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;    
+##  1 light_rum        0.163  PC1       pca_tMJA6
+##  2 lemon_juice     -0.0140 PC1       pca_tMJA6
+##  3 lime_juice       0.224  PC1       pca_tMJA6
+##  4 sweet_vermouth  -0.0661 PC1       pca_tMJA6
+##  5 orange_juice     0.0308 PC1       pca_tMJA6
+##  6 powdered_sugar  -0.476  PC1       pca_tMJA6
+##  7 dark_rum         0.124  PC1       pca_tMJA6
+##  8 cranberry_juice  0.0954 PC1       pca_tMJA6
+##  9 pineapple_juice  0.119  PC1       pca_tMJA6
+## 10 bourbon_whiskey  0.0963 PC1       pca_tMJA6
+## # … with 1,590 more rows
+
+juice(pca_prep)
+
+## # A tibble: 937 × 7
+##    name                 category              PC1     PC2     PC3     PC4    PC5
+##    &lt;fct&gt;                &lt;fct&gt;               &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+##  1 Gauguin              Cocktail Classics   1.38  -1.15    1.34   -1.12    1.52 
+##  2 Fort Lauderdale      Cocktail Classics   0.684  0.548   0.0308 -0.370   1.41 
+##  3 Cuban Cocktail No. 1 Cocktail Classics   0.285 -0.967   0.454  -0.931   2.02 
+##  4 Cool Carlos          Cocktail Classics   2.19  -0.935  -1.21    2.47    1.80 
+##  5 John Collins         Whiskies            1.28  -1.07    0.403  -1.09   -2.21 
+##  6 Cherry Rum           Cocktail Classics  -0.757 -0.460   0.909   0.0154 -0.748
+##  7 Casa Blanca          Cocktail Classics   1.53  -0.392   3.29   -3.39    3.87 
+##  8 Caribbean Champagne  Cocktail Classics   0.324  0.137  -0.134  -0.147   0.303
+##  9 Amber Amour          Cordials and Liqu…  1.31  -0.234  -1.55    0.839  -1.19 
+## 10 The Joe Lewis        Whiskies            0.138 -0.0401 -0.0365 -0.100  -0.531
+## # … with 927 more rows
+
+tidy(pca_prep, 2, type = "variance")
+
+## # A tibble: 160 × 4
+##    terms    value component id       
+##    &lt;chr&gt;    &lt;dbl&gt;     &lt;int&gt; &lt;chr&gt;    
+##  1 variance  2.00         1 pca_tMJA6
+##  2 variance  1.71         2 pca_tMJA6
+##  3 variance  1.50         3 pca_tMJA6
+##  4 variance  1.48         4 pca_tMJA6
+##  5 variance  1.37         5 pca_tMJA6
+##  6 variance  1.32         6 pca_tMJA6
+##  7 variance  1.30         7 pca_tMJA6
+##  8 variance  1.20         8 pca_tMJA6
+##  9 variance  1.19         9 pca_tMJA6
+## 10 variance  1.18        10 pca_tMJA6
+## # … with 150 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We can interpret components by looking at the linear coefficients of
+the variables used to define them. From the plot below, we see that
+the first PC mostly captures variation related to whether the drink
+is made with powdered sugar or simple syrup. Drinks with high values
+of PC1 are usually to be made from simple syrup, those with low
+values of PC1 are usually made from powdered sugar. From the two
+largest bars in PC2, we can see that it highlights the vermouth
+vs. non-vermouth distinction.</p>
+  </li>
+  <li>
+    <p>It is often easier read the components when the bars are sorted
+according to their magnitude. The usual ggplot approach to
+reordering axes labels, using either <code class="language-plaintext highlighter-rouge">reorder()</code> or releveling the
+associated factor, will reorder all the facets in the same way. If
+we want to reorder each facet on its own, we can use the
+<code class="language-plaintext highlighter-rouge">reorder_within</code> function coupled with <code class="language-plaintext highlighter-rouge">scale_*_reordered</code>, both
+from the <code class="language-plaintext highlighter-rouge">tidytext</code> package.</p>
+  </li>
+  <li>
+    <p>Next, we can visualize the scores of each sample with respect to
+these components. The plot below shows
+(<em>z</em><sub><em>i</em>1</sub>,<em>z</em><sub><em>i</em>2</sub>). Suppose that the columns of
+<em>Φ</em> are <em>φ</em><sub>1</sub>, …, <em>φ</em><sub><em>K</em></sub>. Then, since
+<em>x</em><sub><em>i</em></sub> = <em>φ</em><sub>1</sub><em>z</em><sub><em>i</em>1</sub> + <em>φ</em><sub>2</sub><em>z</em><sub><em>i</em>2</sub>,
+the samples have large values for variables with large component
+values in the coordinate directions where <em>z</em><sub><em>i</em></sub> is
+farther along.</p>
+  </li>
+  <li>
+    <p>We conclude with some characteristics of PCA, which can guide the
+choice between alternative dimensionality reduction methods.</p>
+
+    <ul>
+      <li>Global structure: Since PCA is looking for high-variance
+overall, it tends to focus on global structure.</li>
+      <li>Linear: PCA can only consider linear combinations of the
+original features. If we expect nonlinear features to be more
+meaningful, then another approach should be considered.</li>
+      <li>Interpretable features: The PCA components exactly specify how
+to construct each of the derived features.</li>
+      <li>Fast: Compared to most dimensionality reduction methods, PCA is
+quite fast. Further, it is easy to implement approximate
+versions of PCA that scale to very large datasets.</li>
+      <li>Deterministic: Some embedding algorithms perform an optimization
+process, which means there might be some variation in the
+results due to randomness in the optimization. In contrast, PCA
+is deterministic, with the components being unique up to sign
+(i.e., you could reflect the components across an axis, but that
+is the most the results might change).</li>
+    </ul>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Linear dimensionality reduction with PCA]]></summary></entry><entry><title type="html">Uniform Manifold Approximation and Projection</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-3.html" rel="alternate" type="text/html" title="Uniform Manifold Approximation and Projection" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-3</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-3.html"><![CDATA[<p><em>Nonlinear dimensionality reduction with UMAP</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week11/week11-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20%5B4%5D%20Uniform%20Manifold%20Approximation%20and%20Projection/1_8tb5x1es">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Nonlinear dimension reduction methods can give a more faithful
+representation than PCA when the data don’t lie on a low-dimensional
+linear subspace. For example, suppose the data were shaped like
+this. There is no one-dimensional line through these data that
+separate the groups well. We will need an alternative approach to
+reducing dimensionality if we want to preserve nonlinear structure.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(embed)
+theme_set(theme_minimal())
+
+moons &lt;- read_csv("https://uwmadison.box.com/shared/static/kdt9qqvonhcz2ssb599p1nqganrg1w6k.csv")
+ggplot(moons, aes(X, Y, col = Class)) +
+  geom_point() +
+  scale_color_brewer(palette = "Set2")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week11-3/unnamed-chunk-2-1.png" alt="An example nonlinear dataset where projections onto any straight
+line will necessarily cause the classes to bleed
+together." /></p>
+  </li>
+  <li>
+    <p>From a high-level, the intuition behind UMAP is to (a) build a graph
+joining nearby neighbors in the original high-dimensional space, and
+then (b) layout the graph in a lower-dimensional space. For example,
+consider the 2-dimensional sine wave below. If we build a graph, we
+can try to layout the resulting nodes and edges on a 1-dimensional
+line in a way that approximately preserves the ordering.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/sine_wave.png" alt="UMAP (and many other nonlinear methods) begins by constructing a graph in the high-dimensional space, whose layout in the lower dimensional space will ideally preserve the essential relationships between samples." width="400" />
+<p class="caption">
+UMAP (and many other nonlinear methods) begins by constructing a
+graph in the high-dimensional space, whose layout in the lower
+dimensional space will ideally preserve the essential relationships
+between samples.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>A natural way to build a graph is to join each node to its <em>K</em>
+closest neighbors. The choice of <em>K</em> will influence the final
+reduction, and it is treated as a hyperparameter of UMAP. Larger
+values of <em>K</em> prioritize preservation of global structure, while
+smaller <em>K</em> will better reflect local differences. This property is
+not obvious a priori, but is suggested by the simulations described
+in the reading.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/soft_neighborhoods.png" alt="When using fewer nearest neighbors, the final dimensionality reduction will place more emphasis on effectively preserving the relationships between points in local neighborhoods." width="400" />
+<p class="caption">
+When using fewer nearest neighbors, the final dimensionality
+reduction will place more emphasis on effectively preserving the
+relationships between points in local neighborhoods.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>One detail in the graph construction: In UMAP, the edges are
+assigned weights depending on the distance they span, normalized by
+the distance to the closest neighbor. Neighbors that are close,
+relative to the nearest neighbors, are assigned higher weights than
+those that are far away, and points that are linked by high weight
+edges are pulled together with larger force in the final graph
+layout. This is what the authors mean by using a ``fuzzy’’ nearest
+neighbor graph. The fuzziness allows the algorithm to distinguish
+neighbors that are very close from those that are far, even though
+they all lie within a <em>K</em>-nearest-neighborhood.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/soft_neighborhoods_large_k.png" alt="When using larger neighborhoods, UMAP will place more emphasis on preserving global structure, sometimes at the cost of local relationships between points." width="400" />
+<p class="caption">
+When using larger neighborhoods, UMAP will place more emphasis on
+preserving global structure, sometimes at the cost of local
+relationships between points.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>Once the graph is constructed, there is the question of how the
+graph layout should proceed. UMAP uses a variant of force-directed
+layout, and the global strength of the springs is another
+hyperparameter. Lower tension on the springs allow the points to
+spread out more loosely, higher tension forces points closer
+together. This is a second hyperparameter of UMAP.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/graph_layout.png" width="350" />
+
+</p>
+  </li>
+  <li>
+    <p>In R, we can implement this using almost the same code as we used
+for PCA. The <code class="language-plaintext highlighter-rouge">step_umap</code> command is available through the embed
+package.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>theme_set(theme_bw())
+cocktails_df &lt;- read_csv("https://uwmadison.box.com/shared/static/qyqof2512qsek8fpnkqqiw3p1jb77acf.csv")
+umap_rec &lt;- recipe(~., data = cocktails_df) %&gt;%
+  update_role(name, category, new_role = "id") %&gt;%
+  step_normalize(all_predictors()) %&gt;%
+  step_umap(all_predictors(), neighbors = 20, min_dist = 0.1)
+umap_prep &lt;- prep(umap_rec)
+ggplot(juice(umap_prep), aes(UMAP1, UMAP2)) +
+  geom_point(aes(color = category), alpha = 0.7, size = 0.8) +
+  geom_text(aes(label = name), check_overlap = TRUE, size = 3, hjust = "inward")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week11-3/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We can summarize the properties of UMAP,</p>
+
+    <ul>
+      <li>Global or local structure: The number of nearest neighbors K
+used during graph construction can be used modulate the emphasis
+of global vs. local structure.</li>
+      <li>Nonlinear: UMAP can reflect nonlinear structure in
+high-dimensions.</li>
+      <li>No interpretable features: UMAP only returns the map between
+points, and there is no analog of components to describe how the
+original features were used to construct the map.</li>
+      <li>Slower: While UMAP is much faster than comparable nonlinear
+dimensionality reduction algorithms, it is still slower than
+linear approaches.</li>
+      <li>Nondeterministic: The output from UMAP can change from run to
+run, due to randomness in the graph layout step. If exact
+reproducibility is required, a random seed should be set.</li>
+    </ul>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Nonlinear dimensionality reduction with UMAP]]></summary></entry><entry><title type="html">Interactivity in Dimensionality Reduction</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-4.html" rel="alternate" type="text/html" title="Interactivity in Dimensionality Reduction" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-4</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week11-4.html"><![CDATA[<p><em>Guiding dimensionality reduction through user inputs</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week11/week11-4.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week+11+-+4A+Interactivity+in+Dimensionality+Reduction/1_ji2xa69j">Recording</a></p>
+
+<ol>
+  <li>
+    <p>In the academic literature, dimensionality reduction methods are
+usually presented with an algorithmic focus. However, in practice,
+there is often a strong human element in the application of these
+methods, since their value lies in the qualitative interpretations
+that they support. With this in mind, we should try to understand
+how interactivity can be used in the dimensionality reduction
+context. Naturally, all of the techniques we’ve studied in this
+class for interacting with scatterplots (e.g., dynamic linking)
+apply to dimensionality reduction results.</p>
+  </li>
+  <li>
+    <p>For example, here is an interactive version of the UMAP from the
+example in the previous notes. A brush can be used to retrieve
+sample details.</p>
+
+    <p align="center">
+<iframe src="https://data-viz.it.wisc.edu/content/a4fa41a7-ce85-411d-a42a-1ff4963a39dc" width="700" height="600">
+</iframe>
+</p>
+  </li>
+  <li>
+    <p>A less obvious idea is that interactivity can guide the application
+or refinement of the dimensionality reduction itself. For example,
+it can be used to filter the data that are input to the
+dimensionality reduction. More generally, the input data may be the
+result of a complex preprocessing pipeline, and parameters of that
+pipeline can be interactively adjusted.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-4/conceptual-overview.png" width="600" />
+
+</p>
+
+    <p>For example, in dimensionality reduction of temporal data, we may
+first want to compute a sliding window average over time, and the
+widths of the windows can be chosen interactively. For each choice
+of window width, the dimensionality reduction scatterplot can be
+regenerated.</p>
+
+    <p align="center">
+<iframe src="https://data-viz.it.wisc.edu/content/7489973a-9efa-47c7-b140-c58444db6d43" width="750" height="800">
+</iframe>
+</p>
+  </li>
+  <li>
+    <p>Some systems allow users to interactively label observations into
+classes — this is especially common when the ultimate goal of the
+data science system is to support classification. Certain
+dimensionality reduction methods (though not the ones we discussed
+in class) can incorporate these class labels, and so can be
+recomputed each time the user labels a subset of points.</p>
+  </li>
+  <li>
+    <p>Rather than interacting with the observations, we can interact with
+the features. For example, the PCA loadings define derived features.
+By interactively adjusting the values of these loadings, we can
+examine how the dimensionality reduction would change when the
+derived features are manually refined.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-4/feature_dimming.png" width="450" />
+
+</p>
+  </li>
+  <li>
+    <p>It’s also possible to interactively select between several competing
+dimensionality reduction methods. This can be done using a measure
+of dimensionality reduction quality, like the effectiveness with
+which known clusters are separated. However, among all the types of
+interactivity for dimensionality reduction techniques, this is among
+the rarest that is implemented in practice.</p>
+  </li>
+  <li>
+    <p>In most applications, users are expected to interact either directly
+with the visualization (selecting or marking points) or via external
+UI inputs. It’s also possible to have the interaction through
+external program controls or other more novel inputs (like speech,
+gestures, multitouch commands on tablets, …). Here is a breakdown of
+some example interaction strategies, originally from the _Visual
+Interaction with Dimensionality Reduction” survey paper.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-4/interactions.png" width="450" />
+
+</p>
+  </li>
+  <li>
+    <p>Stepping back, it’s helpful to view visualization and data science
+algorithms holistically. In applications where interpretation and
+discovery are important, algorithms and interaction can work
+together to support complex reasoning.</p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Guiding dimensionality reduction through user inputs]]></summary></entry><entry><title type="html">Introduction to Topic Modeling</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-1.html" rel="alternate" type="text/html" title="Introduction to Topic Modeling" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-1</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-1.html"><![CDATA[<p><em>Quantitative descriptions of document topics</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week12-1.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2012%20-%201%3A%20Introduction%20to%20Topic%20Models/1_li5hthm0">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(tidytext)
+library(topicmodels)
+library(gutenbergr) # devtools::install_github("ropensci/gutenbergr")
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Topic modeling is a type of dimensionality reduction method that is
+especially useful for high-dimensional count matrices. For example,
+it can be applied to,</p>
+
+    <ul>
+      <li>Text data analysis, where each row is a document and each column
+is a word. The <em>i**j</em> entry contains the count of word <em>j</em> word
+in the document <em>i</em>.</li>
+      <li>Gene expression analysis, where each row is a biological sample
+and each column is a gene. The <em>i**j</em> entry measures the amount
+of gene <em>j</em> expressed in sample <em>i</em>.</li>
+    </ul>
+
+    <p>This week, we’ll specifically focus on the application to text data,
+since otherwise, we’ve covered relatively few visualization
+techniques that can be applied to this (very common) type of data.
+For the rest of these lectures, we’ll refer to samples as documents
+and features as words, even though these methods can be used more
+generally.</p>
+  </li>
+  <li>
+    <p>These models are useful to know about because they provide a
+compromise between clustering and PCA.</p>
+
+    <ul>
+      <li>In clustering, each document would have to be assigned to a
+single topic. In contrast, topic models allow each document to
+partially belong to several topics simultaneously. In this
+sense, they are more suitable when data do not belong to
+distinct, clearly-defined clusters.</li>
+      <li>PCA is also appropriate when the data vary continuously, but it
+does not provide any notion of clusters. In contrast, topic
+models estimate <em>K</em> topics, which are analogous to a cluster
+centroids (though documents are typically a mix of several
+centroids).</li>
+    </ul>
+  </li>
+  <li>
+    <p>Without going into mathematical detail, topic models perform
+dimensionality reduction by supposing, (i) each document is a
+mixture of topics and (ii) each topic is a mixture of words. For
+(i), consider modeling a collection of newspaper articles. A set of
+articles might belong primarily to the “politics” topic, and others
+to the “business” topic. Articles that describe a monetary policy in
+the federal reserve might belong partially to both the “politics”
+and the “business” topic. For (ii), consider the difference in words
+that would appear in politics and business articles. Articles about
+politics might frequently include words like “congress” and “law,”
+but only rarely words like “stock” and “trade.”</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week12-1/topics_overview.png" width="700" />
+
+</p>
+  </li>
+  <li>
+    <p>A document is a mixture of topics, with more words coming from the
+topics that it is close to. More precisely, a document that is very
+close to a particular topic has a word distribution just like that
+topic. A document that is intermediate between two topics has a word
+distribution that mixes between both topics.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week12-1/LDA-f3.png" width="250" />
+
+</p>
+  </li>
+  <li>
+    <p>Let’s see how to fit a topic model in R. We will use LDA as
+implemented in the <code class="language-plaintext highlighter-rouge">topicmodels</code> package, which expects input to be
+structured as a <code class="language-plaintext highlighter-rouge">DocumentTermMatrix</code>, a special type of matrix that
+stores the counts of words (columns) across documents (rows). In
+practice, most of the effort required to fit a topic model goes into
+transforming the raw data into a suitable <code class="language-plaintext highlighter-rouge">DocumentTermMatrix</code>.</p>
+  </li>
+  <li>
+    <p>To illustrate this process, let’s consider the “Great Library Heist”
+example from the reading. We imagine that a thief has taken four
+books — Great Expectations, Twenty Thousand Leagues Under The Sea,
+War of the Worlds, and Pride &amp; Prejudice — and torn all the chapters
+out. We are left with pieces of isolated pieces of text and have to
+determine from which book they are from. The block below downloads
+all the books into an R object.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>titles &lt;- c("Twenty Thousand Leagues under the Sea",
+        "The War of the Worlds",
+        "Pride and Prejudice", 
+        "Great Expectations")
+books &lt;- gutenberg_works(title %in% titles) %&gt;%
+  gutenberg_download(meta_fields = "title")
+books
+
+## # A tibble: 53,724 × 3
+##    gutenberg_id text                    title                
+##           &lt;int&gt; &lt;chr&gt;                   &lt;chr&gt;                
+##  1           36 "cover "                The War of the Worlds
+##  2           36 ""                      The War of the Worlds
+##  3           36 ""                      The War of the Worlds
+##  4           36 ""                      The War of the Worlds
+##  5           36 ""                      The War of the Worlds
+##  6           36 "The War of the Worlds" The War of the Worlds
+##  7           36 ""                      The War of the Worlds
+##  8           36 "by H. G. Wells"        The War of the Worlds
+##  9           36 ""                      The War of the Worlds
+## 10           36 ""                      The War of the Worlds
+## # … with 53,714 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Since we imagine that the word distributions are not equal across
+the books, topic modeling is a reasonable approach for discovering
+the books associated with each chapter. Let’s start by simulating
+the process of tearing the chapters out. We split the raw texts
+anytime the word “Chapter” appears. We will keep track of the book
+names for each chapter, but this information is not passed into the
+topic modeling algorithm.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>by_chapter &lt;- books %&gt;%
+  group_by(title) %&gt;%
+  mutate(
+    chapter = cumsum(str_detect(text, regex("chapter", ignore_case = TRUE)))
+  ) %&gt;%
+  group_by(title, chapter) %&gt;%
+  mutate(n = n()) %&gt;%
+  filter(n &gt; 5) %&gt;%
+  ungroup() %&gt;%
+  unite(document, title, chapter)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>As it is, the text data are long character strings, giving actual
+text from the novels. To fit LDA, we only need counts of each word
+within each chapter – the algorithm throws away information related
+to word order. To derive word counts, we first split the raw text
+into separate words using the <code class="language-plaintext highlighter-rouge">unest_tokens</code> function in the
+tidytext package. Then, we can count the number of times each word
+appeared in each document using count, a shortcut for the usual
+<code class="language-plaintext highlighter-rouge">group_by</code> and <code class="language-plaintext highlighter-rouge">summarize(n = n())</code> pattern.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>word_counts &lt;- by_chapter %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  anti_join(stop_words) %&gt;%
+  count(document, word)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>These words counts are still not in a format compatible with
+conversion to a <code class="language-plaintext highlighter-rouge">DocumentTermMatrix</code>. The issue is that the
+<code class="language-plaintext highlighter-rouge">DocumentTermMatrix</code> expects words to be arranged along columns, but
+currently they are stored across rows. The line below converts the
+original “long” word counts into a “wide” DocumentTermMatrix in one
+step. Across these 4 books, we have 65 chapters and a vocabulary of
+size 18325.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>chapters_dtm &lt;- word_counts %&gt;%
+  cast_dtm(document, word, n)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Once the data are in this format, we can use the LDA function to fit
+a topic model. We choose <em>K</em> = 4 topics because we expect that each
+topic will match a book. Different hyperparameters can be set using
+the control argument. There are two types of outputs produced by the
+LDA model: the topic word distributions (for each topic, which words
+are common?) and the document-topic memberships (from which topics
+does a document come from?). For visualization, it will be easiest
+to extract these parameters using the tidy function, specifying
+whether we want the topics (beta) or memberships (gamma).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>chapters_lda &lt;- LDA(chapters_dtm, k = 4, control = list(seed = 1234))
+chapters_lda
+
+## A LDA_VEM topic model with 4 topics.
+
+topics &lt;- tidy(chapters_lda, matrix = "beta")
+memberships &lt;- tidy(chapters_lda, matrix = "gamma")
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>This tidy approach is preferable to extracting the parameters
+directly from the fitted model (e.g., using <code class="language-plaintext highlighter-rouge">chapters_lda@gamma</code>)
+because it ensures the output is a tidy data.frame, rather than a
+matrix. Tidy data.frames are easier to visualize using ggplot2.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># highest weight words per topic
+topics %&gt;%
+  arrange(topic, -beta)
+
+## # A tibble: 74,976 × 3
+##    topic term          beta
+##    &lt;int&gt; &lt;chr&gt;        &lt;dbl&gt;
+##  1     1 captain    0.0153 
+##  2     1 _nautilus_ 0.0126 
+##  3     1 sea        0.00907
+##  4     1 nemo       0.00863
+##  5     1 ned        0.00789
+##  6     1 conseil    0.00676
+##  7     1 water      0.00599
+##  8     1 land       0.00598
+##  9     1 sir        0.00485
+## 10     1 day        0.00365
+## # … with 74,966 more rows
+
+# topic memberships per document
+memberships %&gt;%
+  arrange(document, topic)
+
+## # A tibble: 780 × 3
+##    document               topic     gamma
+##    &lt;chr&gt;                  &lt;int&gt;     &lt;dbl&gt;
+##  1 Great Expectations_0       1 0.00282  
+##  2 Great Expectations_0       2 0.461    
+##  3 Great Expectations_0       3 0.00282  
+##  4 Great Expectations_0       4 0.533    
+##  5 Great Expectations_100     1 0.000424 
+##  6 Great Expectations_100     2 0.000424 
+##  7 Great Expectations_100     3 0.999    
+##  8 Great Expectations_100     4 0.000424 
+##  9 Great Expectations_101     1 0.0000140
+## 10 Great Expectations_101     2 0.0000140
+## # … with 770 more rows
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<!-- -->
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>save(topics, memberships, file = "12-1.rda")
+</code></pre></div></div>]]></content><author><name></name></author><summary type="html"><![CDATA[Quantitative descriptions of document topics]]></summary></entry><entry><title type="html">Visualizing Topic Models</title><link href="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-2.html" rel="alternate" type="text/html" title="Visualizing Topic Models" /><published>2022-06-02T00:00:00-05:00</published><updated>2022-06-02T00:00:00-05:00</updated><id>http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-2</id><content type="html" xml:base="http://localhost:4000/stat992_f23/website/docs/2022/06/02/week12-2.html"><![CDATA[<p><em>Visual encodings for memberships and topics</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week12-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2012%20-%202%3A%20Visualizing%20Topic%20Models/1_07w1sdg7">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(tidytext)
+library(topicmodels)
+library(superheat)
+library(ggrepel)
+load("12-1.rda")
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>A topic is a probability distribution across a collection of words.
+If the vocabulary isn’t too large, two appropriate visualization
+strategies are,</p>
+
+    <ul>
+      <li>Faceted barplot: Each facet corresponds to a topic. The height
+of each bar corresponds to a given word’s probability within the
+topic. The sum of heights across all bars is 1.</li>
+      <li>Heatmap: Each row is a topic and each column is a word. The
+color of the heatmap cells gives the probability of the word
+within the given topic.</li>
+    </ul>
+  </li>
+  <li>
+    <p>We can construct a faceted barplot using the tidied beta matrix.
+We’ve filtered to only words with a probability of at least 0.0003
+in at least one topic, but there are still more words than we could
+begin to inspect. Nonetheless, it seems that there are words that
+have relatively high probability in one topic, but not others.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(topics %&gt;% filter(beta &gt; 3e-4), aes(term, beta)) +
+  geom_col() +
+  facet_grid(topic ~ .) +
+  theme(axis.text.x = element_blank())
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-4-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>For the heatmap, we need to pivot the topics, so that words appear
+along columns. From there, we can use superheatmap. The advantage of
+the heatmap is that it takes up less space, and while it obscures
+comparisons between word probabilities 1 the main differences of
+interest are between low and high probability words.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>topics %&gt;%
+  filter(beta &gt; 3e-4) %&gt;%
+  pivot_wider(names_from = "term", values_from = "beta", values_fill = 0, names_repair = "unique") %&gt;%
+  select(-1) %&gt;%
+  superheat(
+  pretty.order.cols = TRUE,
+  legend = FALSE
+  )
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-5-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Neither approach is very satisfactory since there are too many words
+for us to effectively label. A workaround is to restrict attention
+to a subset of “interesting” words. For example, we could filter to,</p>
+
+    <ul>
+      <li>Top words overall: We can consider only words whose
+probabilities are above some threshold. This is the approach
+used in the visualizations above, though the threshold is very
+low (there are still too many words to add labels).</li>
+      <li>Top words per topic: We can sort the words within each topic in
+order from highest to lowest probability, and then keep only the
+S largest.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Most discriminative words: Some words have high probability just
+because they are common. They have high probability within each
+topic but aren’t actually interesting as far as characterizing the
+topics is concerned. Instead, we can focus on words that are common
+in some topics but rare in others.</p>
+  </li>
+  <li>
+    <p>We can obtain the most probable words using the <code class="language-plaintext highlighter-rouge">slice_max</code>
+function, after first grouping by topic. Then, we use the same
+<code class="language-plaintext highlighter-rouge">reorder_within</code> function from the PCA lectures to reorder words
+within each topic. The resulting plot is much more interpretable.
+Judging from the words that are common in each topic’s distribution,
+we can guess that the topics approximately correspond to: 1 -&gt;
+Great Expectations, 2 -&gt; 20,000 Leagues Under the Sea, 3 -&gt;
+Pride &amp; Prejudice, 4 -&gt; War of the Worlds.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>top_terms &lt;- topics %&gt;%
+  group_by(topic) %&gt;%
+  slice_max(beta, n = 10) %&gt;%
+  mutate(term = reorder_within(term, beta, topic))
+
+ggplot(top_terms, aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_reordered()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-6-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>To visualize discriminative words, we first compute a discrimination
+measure for each word and filter to those with the top score. The
+filtered results can be used in either faceted barplots or heatmaps.
+Specifically, to find the words that discriminate between topics <em>k</em>
+and <em>l</em>, we compute
+\(D\left(k, l\right) := \beta\_{kw}\log\left(\frac{\beta\_{kw}}{\beta\_{lw}}\right) + \left(\beta\_{lw} - \beta\_{kw}\right)\)
+for each word <em>w</em>. By maximizing over all pairs <em>k</em>, <em>l</em>, we can
+determine whether the word is discriminative between any pair of
+topics. This might seem like a mysterious formula, but it is just a
+function that is large when topic <em>k</em> has much larger probability
+than topic <em>l</em> (see the figure).</p>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>An example heatmap of discriminative words is shown below. This
+backs up our interpretation from the figure above. It also has the
+advantage that it removes common words (e.g., hand, people, and time
+appeared in the plot above) and highlights rarer words that are
+specific to individual topics (e.g., names of characters that appear
+in only one of the books).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>discriminative_terms &lt;- topics %&gt;%
+  group_by(term) %&gt;%
+  mutate(D = discrepancy(beta)) %&gt;%
+  ungroup() %&gt;%
+  slice_max(D, n = 200) %&gt;%
+  mutate(term = fct_reorder(term, -D))
+
+discriminative_terms %&gt;%
+  select(-D) %&gt;%
+  pivot_wider(names_from = "topic", values_from = "beta") %&gt;%
+  column_to_rownames("term") %&gt;%
+  superheat(
+    pretty.order.rows = TRUE,
+    left.label.size = 1.5,
+    left.label.text.size = 3,
+    bottom.label.size = 0.05,
+    legend = FALSE
+  )
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-8-1.png" alt="" /></p>
+  </li>
+</ol>
+
+<h4 id="visualizing-memberships">Visualizing Memberships</h4>
+
+<ol>
+  <li>
+    <p>Besides the topics, it is useful to study the topic proportions for
+each chapter. One compact approach is to use a boxplot. The result
+below suggest that each chapter is very definitely assigned to one
+of the four topics, except for chapters from Great Expectations.
+Therefore, while the model had the flexibility to learn more complex
+mixtures, it decided that a clustering structure made the most sense
+for Pride &amp; Prejudice, War of the Worlds, and 20,000 Leagues Under
+the Sea.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>memberships &lt;- memberships %&gt;%
+  mutate(
+book = str_extract(document, "[^_]+"),
+topic = factor(topic)
+  )
+
+ggplot(memberships, aes(topic, gamma)) +
+  geom_boxplot() +
+  facet_wrap(~book)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-9-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>The boxplot considers the collection of documents in aggregate. If
+we want to avoid aggregation and visualize individual documents, we
+can use a heatmap or jittered scatterplot. These approaches are
+useful because heatmap cells and individual points can be drawn
+relatively small — anything requiring more space would become
+unwieldy as the number of documents grows. For example, the plot
+below shows that chapter 119 of Great Expectations has unusually
+high membership in Topic 2 and low membership in topic 3.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(memberships, aes(topic, gamma, col = book)) +
+  geom_point(position = position_jitter(h = 0.05, w = 0.3)) +
+  geom_text_repel(aes(label = document), size = 3) +
+  facet_wrap(~ book) +
+  scale_color_brewer(palette = "Set1")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-10-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Alternatively, we can use a “structure” plot. This is a type of
+stacked barplot where the colors of each bar corresponds to a topic.
+We’ve sorted the documents using the result of a hierarchical
+clustering on their proportion vectors. The takeaways here are
+similar to those in the scatterplot above.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gamma &lt;- memberships %&gt;%
+  pivot_wider(names_from = "topic", values_from = "gamma")
+hclust_result &lt;- hclust(dist(gamma[, 3:6]))
+document_order &lt;- gamma$document[hclust_result$order]
+memberships &lt;- memberships %&gt;%
+  mutate(document = factor(document, levels = document_order))
+ggplot(memberships, aes(gamma, document, fill = topic, col = topic)) +
+  geom_col(position = position_stack()) +
+  facet_grid(book ~ ., scales = "free", space = "free") +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_color_brewer(palette = "Set2") +
+  theme(axis.text.y = element_blank())
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week12-2/unnamed-chunk-11-1.png" alt="" /></p>
+  </li>
+</ol>]]></content><author><name></name></author><summary type="html"><![CDATA[Visual encodings for memberships and topics]]></summary></entry></feed>

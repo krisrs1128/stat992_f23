@@ -1,0 +1,16 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+#tree path {
+  fill: none;
+  stroke: #0c0c0c;
+}
+
+#tree circle {
+  stroke: none;
+  fill: "#0c0c0c";
+}
+
+#labels text {
+  font-family: Roboto;
+}

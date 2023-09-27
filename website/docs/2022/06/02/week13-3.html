@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Hypothetical Outcomes | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Hypothetical Outcomes</h1>
+      <div class="post__meta">
+        <time>2022-06-02 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Imagining alternatives in complex data structures</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week13-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2013%20-%203%3A%20Hypothetical%20Outcomes/1_m07h0ary">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(ggdist)
+library(ungeviz)
+library(mgcv)
+library(tidymodels)
+library(gganimate)
+theme_set(theme_bw())
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>From our previous discussions, we now have a rich set of techniques
+for representing uncertainty for either discrete or continuous
+random values. But often, we hope to support inferences for more
+complex objects, like curves, compositions, or networks. How can we
+visualize uncertainty in these more richly structured objects?</p>
+  </li>
+  <li>
+    <p>For example, in linear regression, it’s possible to visualize the
+uncertainty associated with the fit using a confidence band. The
+guarantee is that, across many random samples from the same
+population, the line will usually fall entirely within the band.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>supernova &lt;- read_csv("https://raw.githubusercontent.com/krisrs1128/stat679_code/main/examples/week13/supernova.csv")
+intervals &lt;- gam(Magnitude ~ E9, data = supernova) %&gt;%
+  confidence_band(newdata = supernova %&gt;% select(E9))
+
+ggplot(intervals) +
+  geom_point(data = supernova, aes(E9, Magnitude)) +
+  geom_line(aes(E9, Magnitude)) +
+  geom_ribbon(aes(E9, ymin = lo, ymax = hi), alpha = 0.2) +
+  scale_x_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-3/unnamed-chunk-3-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Have you ever wondered why the band is shaped in the way that it is?
+The curvature comes from the fact that there is uncertainty in both
+the intercept and the slope for the fitted line. This is easy to
+understand by overlaying the regression lines obtained from several
+versions of the same dataset. Formally, we’ve applied the bootstrap
+to resample the original data, though we could have just as well
+drawn from the posterior distribution of a fitted bayesian linear
+regression.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gam(Magnitude ~ E9, data = supernova) %&gt;%
+  sample_outcomes(newdata = supernova %&gt;% select(E9), times = 150) %&gt;%
+  ggplot(aes(E9, Magnitude)) +
+  geom_line(
+    aes(group = .draw), 
+    col = "#d3d3d3", alpha = 0.5, size = 0.6
+  ) +
+  geom_point(data = supernova) +
+  scale_x_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-3/unnamed-chunk-4-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We can generalize this idea to nonlinear fits. For example, below,
+we are using multiple draws to represent the uncertainty of a
+smoothing spline regression between supernova Magnitude and another
+oen of the predictor variables. One nice aspect of showing multiple
+realizations is that it shows uncertainty in the “turns” of
+individual curves, which is not reflected in the confidence bands
+alone.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>outcomes &lt;- gam(Magnitude ~ s(E3, sp = c(.2)), data = supernova) %&gt;%
+  sample_outcomes(newdata = supernova %&gt;% select(E3), times = 150) %&gt;%
+  mutate(.draw = as.integer(.draw))
+
+ggplot(outcomes, aes(E3, Magnitude)) +
+  geom_line(
+    aes(group = .draw), 
+    col = "#d3d3d3", alpha = 0.5, size = 0.6
+  ) +
+  geom_point(data = supernova) +
+  scale_x_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week13-3/unnamed-chunk-5-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>When we show multiple outcomes overlaid like this, our attention
+tends to focus on the area taken up by the multiple lines. In a true
+hypothetical outcome plot, we animate each outcome one at a time.
+This draws attention to the line-to-line uncertainty, rather than
+the area taken up by the ensemble. We can create a hypothetical
+outcome version of the plots above using the <code class="language-plaintext highlighter-rouge">gganimate</code> package.
+This extends ggplot to allow transitions across subsets of data.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p &lt;- ggplot(outcomes, aes(E3, Magnitude)) +
+  geom_line(
+    aes(group = .draw), 
+    col = "#d3d3d3", size = 1.5
+  ) +
+  geom_point(data = supernova) +
+  scale_x_continuous(expand = c(0, 0)) +
+  transition_time(.draw) +
+  ease_aes("sine-in-out")
+
+anim_save("gam_hypo.gif", p, renderer = gifski_renderer())
+</code></pre></div>    </div>
+
+    <p><img src="https://krisrs1128.github.io/stat679_code/examples/week13/gam_hypo.gif" width="500" /></p>
+  </li>
+  <li>
+    <p>Alternatively, we can animate individual events while displaying the
+full distribution in the background.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p &lt;- ggplot(outcomes, aes(E3, Magnitude)) +
+  geom_line(
+    data = rename(outcomes, .draw2 = .draw),
+    aes(group = .draw2),
+    col = "#d3d3d3", alpha = 0.5, size = 0.6
+  ) +
+  geom_line(
+    aes(group = .draw), 
+    col = "red", size = 1.5
+  ) +
+  geom_point(data = supernova) +
+  scale_x_continuous(expand = c(0, 0)) +
+  transition_states(.draw)
+
+anim_save("gam_hypo2.gif", p, renderer = gifski_renderer())
+</code></pre></div>    </div>
+
+    <p><img src="https://krisrs1128.github.io/stat679_code/examples/week13/gam_hypo2.gif" width="500" /></p>
+  </li>
+  <li>
+    <p>A somewhat less standard, but more interactive, approach would be to
+use dynamic linking. For example, in the dotplot to the right, each
+point is associated with one hypothetical outcome. We can hover over
+individual outcomes or brush the region below to highlight the
+corresponding fits in the original display.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>draw_similarity &lt;- outcomes %&gt;%
+  arrange(.draw, E3) %&gt;%
+  mutate(ix = rep(1:39, 150)) %&gt;%
+  select(-E3) %&gt;%
+  pivot_wider(names_from = ix, values_from = Magnitude)
+
+draw_coords &lt;- draw_similarity %&gt;%
+  recipe(~ ., data = .) %&gt;%
+  update_role(.draw, new_role = "id") %&gt;%
+  step_normalize(all_numeric()) %&gt;%
+  step_pca(all_numeric()) %&gt;%
+  prep() %&gt;%
+  bake(draw_similarity) %&gt;%
+  mutate(id = row_number())
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week13/brush_hop.html" width="600" height="400" data-external="1"></iframe>
+  </li>
+  <li>
+    <p>One aspect of hypothetical outcomes is that they represent
+uncertainty in the data space, not the parameter space. For example,
+in the regression above, we could have simply drawn error bars for
+the intercept and slope parameters of the fit. This would be a
+representation of uncertainty in the parameter space. The data space
+representation, however, is much more evocative, and preliminary
+experimental evidence suggests that this leads to better inferences
+in practical applications.</p>
+  </li>
+  <li>
+    <p>Though we have focused on hypothetical outcomes for relative simple
+settings, the idea is applicable quite generally. For example, there
+has been research on visualizing hypothetical outcomes on spatial
+and network data (<a href="https://arxiv.org/abs/2108.09870">NetHOPS</a> and
+<a href="http://www.tandfonline.com/doi/abs/10.1559/1523040054738936"><em>Visualizing geospatial information
+uncertainty</em></a>).</p>
+  </li>
+  <li>
+    <p>A final observation: hypothetical outcome plots can natural build up
+to distributional visualizations. By layering the outcomes on top of
+one another, we can see the distribution emerge over time.</p>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

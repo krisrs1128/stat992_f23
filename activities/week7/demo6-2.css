@@ -1,0 +1,38 @@
+
+/* the command below was exported from https://fonts.google.com/ */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@500&family=Oswald&display=swap');
+
+#bar_labels text {
+  font-size: 12px;
+  text-anchor: end;
+  font-family: "Open Sans";
+}
+
+#title text {
+  font-family: "Oswald";
+}
+
+#slope text {
+  font-size: 10px;
+  opacity: 0.7;
+  color: #525252;
+  font-family: "Open Sans";
+}
+
+#bars rect {
+  opacity: 0.8;
+}
+
+#slope_labels_2000 text {
+  text-anchor: end;
+}
+
+#slope_labels_2010 text {
+  text-anchor: start;
+}
+
+#connections line {
+  /*stroke-width: 1px;*/
+  stroke: #858483;
+  /*opacity: 0.4;*/
+}

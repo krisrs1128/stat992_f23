@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Types of Interactivity in D3 | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Types of Interactivity in D3</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>UI input elements and SVG interaction events</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week6/week6-1">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week%206%20-%201%3A%20Types%20of%20Interactivity%20in%20D3/1_xqbgmeha">Recording</a></p>
+
+<ol>
+  <li>Any HTML page can support text, numeric, button, select, and slider inputs,
+just like in Shiny. In fact, behind the scenes, Shiny inputs are simply R
+wrappers of plain HTML input elements. For example, the HTML code below creates
+an example of each of these inputs.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;input type="text"&gt; Enter Something&lt;/input&gt;
+&lt;button type="button"&gt;Click Me&lt;/button&gt;
+&lt;label for="dropdown"&gt;Select an option...&lt;/label&gt;
+&lt;select name="Select an Option" id="dropdown"&gt;
+  &lt;option value="optA"&gt;Option A&lt;/option&gt;
+  &lt;option value="optB"&gt;Option B&lt;/option&gt;
+  &lt;option value="optC"&gt;Option C&lt;/option&gt;
+&lt;/select&gt;
+&lt;input type="range" min="0", max="1" step="0.1"&gt;This is a slider&lt;/input&gt;
+</code></pre></div>    </div>
+    <p>This is what the page looks like,</p>
+  </li>
+</ol>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-1/inputs.html"></iframe>
+<p>The default styling for input elements are not that attractive. Fortunately,
+  many people have come up with CSS rules to create more attractive components.
+  For example, by applying classes defined in <a href="https://getbootstrap.com/docs/5.0/forms/overview/">Bootstrap</a> (the same library behind <code class="language-plaintext highlighter-rouge">bslib</code>), almost the same HTML code as above yields the more modern page
+  below.</p>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-1/inputs-bs.html"></iframe>
+
+<ol>
+  <li>An aside about <code class="language-plaintext highlighter-rouge">select</code> inputs: We can define the selection options using a
+data bind. Contrast the manual implementation
+[<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-1/manual-select.html">1</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-1/manual-select.js">2</a>]
+of the gapminder visualization that enters the options in the HTML code with
+this binding-based alternative
+[<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-1/d3-select.html">3</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-1/d3-select.js">4</a>]
+that uses the function <code class="language-plaintext highlighter-rouge">setup_inputs</code> to create input elements using an array
+of continent names.</li>
+  <li>In addition to these separate interface elements, we can “listen” for
+specific kinds of user interactions. In web programming, objects that register
+specific types of user interactions are called event listeners. For example, we
+can use a listener to register hover events when the mouse moves over a specific
+HTML element. Let’s look at basic versions of these events on a canvas with just
+a few randomly located circles.</li>
+</ol>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-1/svg-inputs.html" width="800" height="500"></iframe>
+
+<ol>
+  <li>Click events are defined using an <code class="language-plaintext highlighter-rouge">.on(“click”, function)</code> added to a D3
+selection. For example, this will print to the console every time the second
+circle is clicked.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function f2() {
+  console.log("Clicked!")
+}
+
+d3.select("#circle2")
+  .on("click", f2)
+</code></pre></div></div>
+<p>Note that, if we wanted to print whenever any element from a selection was
+  clicked, we simply add <code class="language-plaintext highlighter-rouge">.on("click", function)</code> to the full selection. For
+  example, we could use this to run a function whenever any point within a
+  scatterplot is clicked (the same principle applies to all listeners in these
+  notes).</p>
+
+<ol>
+  <li>If we just want to detect whether the user’s mouse has moved over an element,
+we can use <code class="language-plaintext highlighter-rouge">.on("mousemove", function)</code>. We can also keep track of the user’s
+mouse position using <code class="language-plaintext highlighter-rouge">d3.pointer(event)</code>, where <code class="language-plaintext highlighter-rouge">event</code> refers to an event
+object that is pass into the function by default,</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  function f4(event) {
+    console.log(d3.pointer(event))
+  }
+
+  d3.select("#circle4")
+    .on("mousemove", f4)
+</code></pre></div></div>
+
+<ol>
+  <li>We can even distinguish between when the mouse has just entered or exited an
+SVG element using <code class="language-plaintext highlighter-rouge">on("mouseover", ...)</code> and <code class="language-plaintext highlighter-rouge">.on(“mouseout”, ...)</code>.</li>
+  <li>Brushes are defined using <code class="language-plaintext highlighter-rouge">d3.brush()</code>. They can be applied to a <code class="language-plaintext highlighter-rouge">&lt;g&gt;</code>
+element using <code class="language-plaintext highlighter-rouge">.call()</code> applied to the group (otherwise, they will not appear).
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  let brush = d3.brush().on("brush", f)
+  d3.select(".brush").call(brush) // the &lt;g&gt; element was given class "brush"
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-1/brush.html" width="800" height="200"></iframe>
+
+<ol>
+  <li>The <code class="language-plaintext highlighter-rouge">.on("brush", f)</code> element at the end of the brush definition will make
+sure to call <code class="language-plaintext highlighter-rouge">f</code> every time the brush is moved. Like hover events, we can
+distinguish between when brushes have been just moved or whether the user has
+lifted their mouse up. In Shiny, we were only able to update a brush selection
+after the users’ mouse had moved, so this is going to allow us to create
+smoother visualizations.</li>
+  <li>To access the pixel coordinates of the brush’s bounding box, we can use the
+<code class="language-plaintext highlighter-rouge">selection</code> attribute of the event object that is passed into the <code class="language-plaintext highlighter-rouge">brush</code>
+function. For example, the code above is printing the pixel coordinates each
+time the brush is modified.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  function f(event) {
+    console.log(event.selection)
+  }
+</code></pre></div></div>
+
+<ol>
+  <li>Finally, we can create <a href="http://bl.ocks.org/ludwigschubert/0236fa8594c4b02711b2606a8f95f605">multiple
+brushes</a>
+simultaneously, which had been impossible in Shiny. This is handy for sketching
+out complex shapes in time series, like in the <a href="https://hci.stanford.edu/courses/cs448b/papers/Hocheiser_TimeSearcher_2002-06.pdf">Time Searcher</a>.</li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

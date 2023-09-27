@@ -1,0 +1,208 @@
+---
+title: D3 Selections
+layout: post
+output:
+  md_document:
+    preserve_yaml: true
+---
+
+_Techniques for referring to DOM elements_
+
+[Code](https://github.com/krisrs1128/stat679_code/tree/main/examples/week4/week4-3), [Recording](https://mediaspace.wisc.edu/media/Week+4+-+3A+D3+Selections/1_zuu2a5js)
+
+1. In D3, interactive visualizations work by rearranging the appearance and
+layout of a web elements (usually SVG objects) in response to user queries. For
+example, when a hovers over a circle element in a scatterplot, we might want to
+change its color and update a text description accompanying it. D3 accomplishes
+these sorts of modifications through a simple but powerful mechanism — the
+selection.
+
+2. The two key functions for managing selections are `d3.select()` and
+`d3.selectAll()`. Both functions take as arguments strings that referring to
+parts of the webpage and return either the first matching tag (`d3.select()`) or
+all matching tags (`d3.selectAll()`). There are three ways to refer to parts of
+the webpage.
+	* Element IDs: Use the `#` symbol followed by the ID of interest to select the item with that ID. For example, `d3.select("#test")` will return a selection for a tag with the an `id='test'` attribute.
+	* Element classes: Use a `.` symbol followed by the class of interest to select all items with that class. For example, `d3.select(".highlighted")` will select all elements with class set to `highlight`.
+	* Element types: You can also select all objects of a certain type giving the name of that type. For example `d3.select("circle")` will select all circles on the page.
+
+3. We can build nested queries by (1) combining the above strategies, (2)
+restricting to elements with specific IDs, and (3) chaining several selections
+in sequence. For example, here are three ways to select the set of highlighted
+circles on a webpage. Here are examples of each of the three strategies,
+
+    ```
+    // strategy (1) to get all circles with class = "higlight."
+    d3.selectAll("circle .higlighted")
+
+    // strategy (2) to get all elements with class = "background" within a group element with ID "group1"
+    d3.selectAll("#group1 .background")
+
+    // strategy (3) select all text within an element with id "button1"
+    d3.select("#button1")
+      .selectAll("text")
+    ```
+
+4. Note that a selection can be stored in a variable. For example, an equivalent
+way of selecting in the third example is to write,
+```
+let button = d3.select("#button1")
+button.selectAll("text")
+```
+
+5. Once we have an object in our selection, we can modify its attributes. This
+is done using the `attr()` or `attrs()` functions, for one or multiple
+attributes, respectively. For example, suppose we want to change the color for
+the `#changeme` circle and the width for the path elements (make  them narrow or
+wide, depending on the class label) on the DOM below.
+```
+	<!DOCTYPE html>
+	<html>
+	  <head>
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+		<script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+		<link rel="stylesheet" href="modifySelection.css">
+	  </head>
+	  <body>
+		<svg height=500 width=900>
+		  <circle  r=20 cx=50 cy=50 id="changeme" fill="black"/>
+		  <g>
+	    	<path class="wide" d="M 100 100 L 200 105 L 300 115 L 400 100" />
+	    	<path class="wide" d="M 100 200 L 200 205 L 300 215 L 400 200"/>
+	    	<path class="narrow" d="M 100 300 L 200 305 L 300 315 L 400 300"/>
+	    	<path class="narrow" d="M 100 400 L 200 405 L 300 415 L 400 400"/>
+		  </g>
+		</svg>
+	  </body>
+	  <script src="modifySelection.js"></script>
+	</html>
+```
+
+6. We can accomplish this using the D3 code below, which we called in
+`modifySelection.js` at the bottom of the previous page.
+```
+	d3.select("#changeme")
+	  .attr("fill", "#e34234");
+
+	d3.selectAll(".wide")
+	  .attr("stroke-width", 20);
+
+	d3.selectAll(".narrow")
+	  .attr("stroke-width", 1);
+```
+
+  <iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection.html" width=500 height = 400></iframe>
+
+7. If you ran the previous example in the browser, the circle already seemed to
+be red when you opened the browser. This is because the code executed so
+quickly, you didn’t notice the change. We can slow down the change using a
+`transition()` (covered more next week).
+    ```
+    let transition_length = 2000;
+
+    d3.select("#changeme")
+      .transition()
+      .duration(transition_length)
+      .attr("fill", "#e34234");
+
+    d3.selectAll(".wide")
+      .transition()
+      .duration(transition_length)
+      .attr("stroke-width", 20);
+
+    d3.selectAll(".narrow")
+      .transition()
+      .duration(transition_length)
+      .attr("stroke-width", 1);
+    ```
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-transition.html" width=500 height = 400></iframe>
+
+9. A special type of modification can be done for text elements. Instead of
+changing the attributes of the element, we can change the text that appears
+between the open and closing tags using the `.text()` function. The source html
+page,
+
+`textChange.html`:
+
+  ```
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <script src="https://d3js.org/d3.v7.min.js"></script>
+      <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+      <link rel="stylesheet" href="textChange.css">
+    </head>
+    <body>
+      <h1>Change me!</h1>
+    </body>
+    <script src="textChange.js"></script>
+  </html>
+  ```
+
+`textChange.js`:
+
+```
+d3.select("h1")
+  .transition()
+  .delay(2000)
+  .text("you are changed!!")
+```
+
+`textChange.css` (for the fancy font)
+
+```
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+h1 {
+  font-family: 'Pacifico', cursive;
+  font-size: 100px;
+}
+```
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/textChange.html" width=500 height=400></iframe>
+
+10. We can remove all elements in a selection using `.exit()`. For example, this
+removes the circle in our first example.
+```
+	d3.select("#changeme").exit()
+```
+
+11. Moreover, we can add new tags below current selections. Conceptually, we
+think of the D3 selection as taking us to a specific node in the DOM tree, and
+at this position, we append a new leaf. For example, the script below creates a
+new path and paragraph element on the first html page.
+
+    ```
+    d3.select("g")
+      .append("path")
+      .attrs({
+        class: "wide",
+        d: "M 100 0 L 200 5 L 300 15 L 400 0",
+        "stroke": "#008b8b"
+      })
+    ```
+    Notice that the `stroke` attribute in the newly appended tag overrules the
+    stroke specified by its class (`wide`) in the accompanying css.
+
+  <iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-append.html" width=500 height=500></iframe>
+
+12. A common trick is to fade an element in by appending it invisibly and then
+transitioning to visible. The first `.attrs()` call below creates an invisible
+(`width = 0`) path at the correct location, the second call increases the wide
+and sets the class (to make the line purple).
+```
+	d3.select("g")
+	  .append("path")
+	  .attrs({
+	    "stroke-width": 0,
+	    d: "M 100 0 L 200 5 L 300 15 L 400 0",
+	  })
+	  .transition()
+	  .duration(1000)
+	  .attrs({
+	    "stroke-width": 20,
+	    class: "wide"
+	  })
+  ```
+
+  <iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-smooth-append.html" width=500 height=500></iframe>

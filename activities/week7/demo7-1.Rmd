@@ -1,0 +1,49 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(sf)
+library(tmap)
+```
+
+```{r}
+trees <- read_csv("https://uwmadison.box.com/shared/static/t1mk6i4u5ks5bjxaw2c7soe2z8i75m2o.csv")
+roads <- read_sf("https://uwmadison.box.com/shared/static/28y5003s1d0w9nqjnk9xme2n86xazuuj.geojson")
+buildings <- read_sf("https://uwmadison.box.com/shared/static/qfmrp9srsoq0a7oj0e7xmgu5spojr33e.geojson")
+```
+
+```{r}
+ggplot(trees) +
+  geom_point(
+    aes(longitude, latitude, col = species_group),
+    alpha = 0.8, size = 0.9
+    ) +
+  scale_color_brewer(palette = "Set3") +
+  coord_fixed()
+
+tm_shape(roads) +
+  tm_lines()
+```
+
+```{r}
+trees <- st_as_sf(trees, coords = c("longitude", "latitude")) %>%
+  mutate(health = factor(health, levels = c("Good", "Fair", "Poor")))
+
+tm_shape(roads) +
+  tm_lines() +
+  tm_shape(buildings) +
+  tm_polygons(col = "#f7f7f7") +
+  tm_shape(trees) +
+  tm_dots(col = "species_group", title = "Species", size = .01) +
+  tm_layout(legend.outside = TRUE) +
+  tm_facets("health")
+```
+

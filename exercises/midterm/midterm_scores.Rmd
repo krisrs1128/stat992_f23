@@ -1,0 +1,27 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+theme_set(theme_bw())
+scores <- read_csv("~/Downloads/2022-10-30T1845_Grades-FA22_STAT_679_001.csv") %>%
+  rename(midterm = `Midterm Exam (1739953)`) %>%
+  select(midterm) %>%
+  na.omit()
+```
+
+```{r, fig.height = 1.8, fig.width = 5}
+ggplot(scores) +
+  geom_dotplot(aes(x = midterm, y = ..count..), binwdith = 0.5) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(x = "Score", y = "") +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+ggsave("~/Downloads/scores.png")
+```
+

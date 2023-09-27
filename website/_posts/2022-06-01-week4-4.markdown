@@ -1,0 +1,91 @@
+---
+title: Binding data
+layout: post
+output:
+  md_document:
+    preserve_yaml: true
+---
+
+*A first look at visual encoding in D3*
+
+[Code](https://github.com/krisrs1128/stat679_code/tree/main/examples/week4/week4-4), [Recording](https://mediaspace.wisc.edu/media/Week+4+-+4A+Binding+data/1_10r7ssbu)
+
+1.  If we only had D3 selections, we would be able to do a fair bit of HTML
+manipulation, but it would be tedious to work with datasets, because we would
+have to manually append the elements one by one. Fortunately, D3 allows us to
+“bind” data to selections. We will explore this concept in much more detail next
+week, but for now, let’s see how this allows us to scale the `append` and
+`attrs`-guided modifications to larger datasets.
+
+1. We’ll create a simulated dataset of 100 random two-dimensional uniform
+numbers using a map. Each element in the length 100 array is an object with two
+keys, “x” and “y”, giving the the location for the point in pixel coordinates.
+  ```
+let ix = d3.range(100)
+let generator = d3.randomUniform(0, 500)
+let u = ix.map(_ =>{ return {x: generator(), y: generator(), r: 0.01 * generator()} })
+  ```
+
+3. We then bind the dataset `u` to a group called “scatter.”
+  ```
+d3.select("#scatter")
+    .selectAll("circle")
+    .data(u).enter()
+    .append("circle")	  
+    .attrs({
+      cx: d => d.x,
+      cy: d => d.y,
+      r: d => d.r
+    })
+  ```
+  The result looks like this,
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-4/scatter.html" width=800></iframe>
+
+1.  Let’s consider the code line-by-line. We first create a selection on the
+“scatter” group element `<g id="scatter"/>`, which was originally defined on the
+[HTML
+page](https://github.com/krisrs1128/stat679_code/blob/main/examples/week4/week4-4/scatter.html).
+Next is a counterintuitive part — we define a selection of circles, even though
+there are none on the page! We have to do this to anticipate the tags that will
+be created in the data bind, which happens in the next line using `.data(u)`.
+
+1. The `.enter()` call calculates the difference between the current circle
+selection (which sees no relevant tags) and the array we’ve attached (which has
+100 elements). The difference (0 vs. 100) means that when we call
+`.append("circle")` in the next line, we append 100 circles.  But at the start,
+these circles have no attributes, and they would be invisible on the webpage if
+we stopped our code here.
+
+1. To modify their appearance, we use `attrs()`. Before, we always set the
+attributes manually. Now that we have data, we can set attributes by referring
+to their values — this just the concept of visual encoding, but in D3 instead of
+ggplot2.
+
+1. The process is similar to what the `aes()` command does. We take an
+attributes of the mark that we want to specify, like the `cx` x-coordinates of
+the circles mark we’ve appended, and have it depend on a property of the array
+elements via small functions. Specifically, `cx: d => d.x` is saying to set the
+`cx` attribute of each circle by filling it with the value of `d.x` in the
+associated bound array element.
+
+1. We can also modify many elements that have been bound to data. The example
+below has the radii of the circles expand and contract periodically. It
+accomplishes this by continually updating the `rnew` property in `u`, rebinding
+the data, and updating the attributes. We call the `animate` function
+recursively, but adding a .1 second between calls, so that the animation moves
+smoothly.
+    ```
+    // animate the radii of the circles
+    function animate(t) {
+      u = u.map(d => { return {x: d.x, y: d.y, r: d.r, rnew: (1 + Math.sin(t/10)) * d.r }})
+      d3.selectAll("circle")
+    	.data(u)
+    	.attr("r", d => d.rnew)
+
+      d3.timeout(() => { animate(t + 1) }, 100)
+    }
+
+    animate(0);
+    ```
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-4/scatter-animate.html" width=900></iframe>

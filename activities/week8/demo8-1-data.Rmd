@@ -1,0 +1,36 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+pollution <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week9/exercises/pollution_wide.csv")
+
+```
+
+```{r}
+library(glue)
+library(lubridate)
+pollution2 <- pollution %>%
+  select(date, starts_with("pollution")) %>%
+  pivot_longer(-date, names_to = "hour", values_to = "pollution") %>%
+  mutate(
+    hour = as.numeric(str_extract(hour, "[0-9]+")),
+    datetime = glue("{date} {hour}:00:00"),
+    date = date(datetime),
+    year = year(datetime),
+    month = month(datetime),
+    datetime = as_datetime(datetime),
+    pollution = exp(pollution) - 1
+  ) %>%
+  filter(year == 2014) %>%
+  select(date, hour, pollution)  %>%
+  arrange(date, hour)
+write_csv(pollution2, "pollution.csv")
+```
+

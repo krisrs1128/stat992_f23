@@ -1,0 +1,80 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(mgcv)
+library(ungeviz)
+library(jsonlite)
+theme_set(theme_bw())
+```
+
+1. [South African Heart Disease GAM] In this problem, we will visualize the
+prediction uncertainty in a generalized additive model (GAM) of the South
+African Heart Disease
+[dataset](https://hastie.su.domains/ElemStatLearn/datasets/SAheart.info.txt).
+This data were used to evaluate risk factors for heart disease in a sample of
+462 South African men in a region with high coronary heart disease (CHD)
+prevalence. We will use a GAM to fit a type of logistic regression to the binary
+CHD response using LDL cholesterol level as the predictor. Unlike standard
+logistic regression, a GAM's logistic regression does not constrain the
+predicted probability to follow a logistic function^[This is achieved by applying the logistic link to a nonlinear transformation of LDL.].
+
+a. Make a jittered scatterplot showing how CHD risk varies as a function of LDL.
+
+```{r}
+heart <- read_csv("https://github.com/krisrs1128/stat679_code/raw/main/activities/week13/heart.csv")
+```
+
+b. The code below fits a GAM between LDL and CHD. Visualize 20 predicted
+probability curves obtained by bootstrapping the original dataset.
+
+```{r}
+fit <- gam(chd ~ s(ldl), data = heart, family = "binomial")
+new_data <- tibble(ldl = seq(min(heart$ldl), max(heart$ldl), length.out = 100))
+```
+
+c. Overlay a 95% pointwise confidence band onto the 20 hypothetical outcomes
+from (b).
+
+```{r}
+```
+
+d. Instead of showing all the predicted probability curves simultaneously,
+create an animated hypothetical outcome plot. Each frame should highlight both
+the a hypothetical predicted probability curve and the samples used to generate
+that bootstrap sample.
+
+```{r}
+bootstrap_data <- function(df, newdata) {
+  fit <- gam(chd ~ s(ldl), data = df, family = "binomial")
+  y_hat <- predict(fit, newdata, type = "response")
+  list(
+    curve = data.frame(ldl = new_data$ldl, y_hat = y_hat),
+    ids = df[[".original_id"]] - 1
+  )
+}
+
+bootstrapper(100)(heart) %>%
+  split(.$.draw) %>%
+  map(~ bootstrap_data(., new_data)) %>%
+  write_json("curves.json")
+
+heart %>%
+  write_csv("heart.csv")
+
+conf %>%
+  mutate(
+    lo = as.numeric(lo),
+    hi = as.numeric(hi)
+  ) %>%
+  select(ldl, lo, hi) %>%
+  write_csv("conf.csv")
+```

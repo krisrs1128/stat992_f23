@@ -1,0 +1,11 @@
+
+circle {
+  r: 5;
+}
+
+line {
+  fill: none;
+  stroke-width: 2px;
+  stroke-opacity: 0.2;
+  stroke: black;
+}

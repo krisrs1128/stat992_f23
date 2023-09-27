@@ -1,0 +1,10 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200&display=swap');
+#scatter circle {
+  fill-opacity: .8;
+}
+
+#labels text {
+  font-family: Kanit;
+  font-size: 8;
+}

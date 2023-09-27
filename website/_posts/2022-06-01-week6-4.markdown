@@ -1,0 +1,131 @@
+---
+title: Brush Interaction in D3
+layout: post
+output:
+  md_document:
+    preserve_yaml: true
+---
+
+_Use cases for and implementation of brush events_
+
+[Code](https://github.com/krisrs1128/stat679_code/tree/main/examples/week6/week6-4), [Recording](https://mediaspace.wisc.edu/media/Week%206%20-%204%3A%20Brush%20Interaction%20in%20D3/1_ov35af68)
+
+1. When we are interactively defining a graphical query, it’s often useful to be able to specify a range of values of interest. For example, brushes can be used for dynamically linking two plots, like in these linked scatterplots,
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-4/penguins.html" width=800 height=500></iframe>
+
+or this linked time series plot,
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-4/bike.html" width=800 height=310></iframe>
+
+Brushing can also be used to implement the focus + context principle through a zoom widget,
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-4/zoom.html" width=800 height=500></iframe>
+
+2. We learned how to create a brush in these [earlier notes](https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-1.html), but
+we never discussed how to use a brush to define a query. Unfortunately, unlike
+Shiny, D3 has no function to return the indices of the samples lying under the
+brush. Instead, we will manually extract the pixel coordinates of the associated
+brush and then relate them to the original data values. To access these
+underlying brush coordinates, we can use the brush event's `selection`
+attribute, which is the approach in the `bike.js` time series example above,
+
+```
+let brush = d3.brush()
+  .extent([[0, 0], [300, 300]])
+  .on("brush", ev => brush_update(ev, data, scales));
+
+function brush_update(ev, data, scales) {
+  let dates = filter_dates(ev, data, scales);
+  ...
+
+function filter_dates(ev, data, scales) {
+  let [[x0, y0], [x1, y1]] = ev.selection;
+```
+
+or we can use the `d3.brushSelection` function to operate directly on the brush
+object, which is the approach in the `penguins.js` linked scatterplot example,
+since there were several brushes to handle simultaneously,
+```
+// get selection in current brush b
+let node = d3.select(`#brush${b}`).node()
+let [[x0, y0], [x1, y1]] = d3.brushSelection(node)
+```
+
+3. To use these pixel coordinates to define a queries, we have to relate our
+original data values with pixel coordinates. Fortunately, continuous scales are
+associated with an `.invert()` method which maps pixel coordinates back to the
+original data domain. For example, in the bike example, we get `[[x0, y0], [x1, y1]]`
+coordinates specifying the brush's bounding box in the original temperature and
+humidity dimensions. We then loop over every point in the dataset to see whether
+it is contained within these bounds.
+
+```
+function filter_dates(ev, data, scales) {
+  // relate pixel with original data coordinates
+  let [[x0, y0], [x1, y1]] = ev.selection;
+  x0 = scales.x.invert(x0);
+  y0 = scales.y.invert(y0);
+  x1 = scales.x.invert(x1);
+  y1 = scales.y.invert(y1);
+
+  // check which time series belong within the scatterplot range
+  let dates = [];
+  for (let i = 0; i < data.scatter.length; i++) {
+    let di = data.scatter[i]
+    if (di.temp > x0 && di.hum < y0 && di.temp < x1 && di.hum > y1) {
+      dates.push(di.dteday)
+    }
+  }
+  return dates
+}
+```
+The same inversion trick is used in the penguins example (see lines 54 - 67).
+
+5. We can compose brush queries in original ways. For example, in the example
+below, we’re highlighting points if they lie within both brush selections (not
+the either brush, like in our previous example). This is implemented by looping
+over datapoints and checking whether they lie in the data ranges specified by
+both brushes (lines 53 - 71 in [penguins2.js](https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-4/penguins2.js)).
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-4/penguins2.html" width=800 height=400></iframe>
+
+6. For our zooming example, we use a slightly different approach from either of
+the previous two. Rather than defining arrays describing which points have been
+selected, we use the brush to redefine the scales that define the main
+scatterplot. Specifically, recall that every scale has to map a domain in the
+data space to a range in the pixel space.  By changing which data values we
+consider the upper and lower limits of the domain, we can map smaller (or
+larger) zones of the data space to the same range in the pixel space. This is
+done by finding the current brush extent in the data space,
+  ```
+function brush_update(ev, scales) {
+    let [[x0, y0], [x1, y1]] = ev.selection;
+    x0 = scales.x_zoom.invert(x0)
+    y0 = scales.y_zoom.invert(y0)
+    x1 = scales.x_zoom.invert(x1)
+    y1 = scales.y_zoom.invert(y1)
+    ...
+  ```
+  and then regenerating the `x` and `y` scales to have a domain reflecting the
+  brush selection,
+
+```
+  function brush_update(ev, scales) {
+    // update the scales
+    let new_scale = make_scales([[x0, y0], [x1, y1]])
+
+    // update the circle positions using the new scales
+    update(new_scale)
+...
+
+function make_scales(extent) {
+  return {
+    x: d3.scaleLinear()
+      .domain([extent[0][0], extent[1][0]]) // updates domain using brush X
+      .range([0, width]),
+    y: d3.scaleLinear()
+      .domain([extent[0][1], extent[1][1]]) // updates domain using brush Y
+      .range([0, height]),
+  ...
+```

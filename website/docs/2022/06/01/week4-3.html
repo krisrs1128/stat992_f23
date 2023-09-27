@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>D3 Selections | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">D3 Selections</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Techniques for referring to DOM elements</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week4/week4-3">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week+4+-+3A+D3+Selections/1_zuu2a5js">Recording</a></p>
+
+<ol>
+  <li>
+    <p>In D3, interactive visualizations work by rearranging the appearance and
+layout of a web elements (usually SVG objects) in response to user queries. For
+example, when a hovers over a circle element in a scatterplot, we might want to
+change its color and update a text description accompanying it. D3 accomplishes
+these sorts of modifications through a simple but powerful mechanism — the
+selection.</p>
+  </li>
+  <li>The two key functions for managing selections are <code class="language-plaintext highlighter-rouge">d3.select()</code> and
+<code class="language-plaintext highlighter-rouge">d3.selectAll()</code>. Both functions take as arguments strings that referring to
+parts of the webpage and return either the first matching tag (<code class="language-plaintext highlighter-rouge">d3.select()</code>) or
+all matching tags (<code class="language-plaintext highlighter-rouge">d3.selectAll()</code>). There are three ways to refer to parts of
+the webpage.
+    <ul>
+      <li>Element IDs: Use the <code class="language-plaintext highlighter-rouge">#</code> symbol followed by the ID of interest to select the item with that ID. For example, <code class="language-plaintext highlighter-rouge">d3.select("#test")</code> will return a selection for a tag with the an <code class="language-plaintext highlighter-rouge">id='test'</code> attribute.</li>
+      <li>Element classes: Use a <code class="language-plaintext highlighter-rouge">.</code> symbol followed by the class of interest to select all items with that class. For example, <code class="language-plaintext highlighter-rouge">d3.select(".highlighted")</code> will select all elements with class set to <code class="language-plaintext highlighter-rouge">highlight</code>.</li>
+      <li>Element types: You can also select all objects of a certain type giving the name of that type. For example <code class="language-plaintext highlighter-rouge">d3.select("circle")</code> will select all circles on the page.</li>
+    </ul>
+  </li>
+  <li>
+    <p>We can build nested queries by (1) combining the above strategies, (2)
+restricting to elements with specific IDs, and (3) chaining several selections
+in sequence. For example, here are three ways to select the set of highlighted
+circles on a webpage. Here are examples of each of the three strategies,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> // strategy (1) to get all circles with class = "higlight."
+ d3.selectAll("circle .higlighted")
+
+ // strategy (2) to get all elements with class = "background" within a group element with ID "group1"
+ d3.selectAll("#group1 .background")
+
+ // strategy (3) select all text within an element with id "button1"
+ d3.select("#button1")
+   .selectAll("text")
+</code></pre></div>    </div>
+  </li>
+  <li>Note that a selection can be stored in a variable. For example, an equivalent
+way of selecting in the third example is to write,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let button = d3.select("#button1")
+button.selectAll("text")
+</code></pre></div>    </div>
+  </li>
+  <li>Once we have an object in our selection, we can modify its attributes. This
+is done using the <code class="language-plaintext highlighter-rouge">attr()</code> or <code class="language-plaintext highlighter-rouge">attrs()</code> functions, for one or multiple
+attributes, respectively. For example, suppose we want to change the color for
+the <code class="language-plaintext highlighter-rouge">#changeme</code> circle and the width for the path elements (make  them narrow or
+wide, depending on the class label) on the DOM below.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+   &lt;head&gt;
+     &lt;script src="https://d3js.org/d3.v7.min.js"&gt;&lt;/script&gt;
+     &lt;script src="https://d3js.org/d3-selection-multi.v1.min.js"&gt;&lt;/script&gt;
+     &lt;link rel="stylesheet" href="modifySelection.css"&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;svg height=500 width=900&gt;
+       &lt;circle  r=20 cx=50 cy=50 id="changeme" fill="black"/&gt;
+       &lt;g&gt;
+     	&lt;path class="wide" d="M 100 100 L 200 105 L 300 115 L 400 100" /&gt;
+     	&lt;path class="wide" d="M 100 200 L 200 205 L 300 215 L 400 200"/&gt;
+     	&lt;path class="narrow" d="M 100 300 L 200 305 L 300 315 L 400 300"/&gt;
+     	&lt;path class="narrow" d="M 100 400 L 200 405 L 300 415 L 400 400"/&gt;
+       &lt;/g&gt;
+     &lt;/svg&gt;
+   &lt;/body&gt;
+   &lt;script src="modifySelection.js"&gt;&lt;/script&gt;
+ &lt;/html&gt;
+</code></pre></div>    </div>
+  </li>
+  <li>We can accomplish this using the D3 code below, which we called in
+<code class="language-plaintext highlighter-rouge">modifySelection.js</code> at the bottom of the previous page.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> d3.select("#changeme")
+   .attr("fill", "#e34234");
+
+ d3.selectAll(".wide")
+   .attr("stroke-width", 20);
+
+ d3.selectAll(".narrow")
+   .attr("stroke-width", 1);
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection.html" width="500" height="400"></iframe>
+
+<ol>
+  <li>If you ran the previous example in the browser, the circle already seemed to
+be red when you opened the browser. This is because the code executed so
+quickly, you didn’t notice the change. We can slow down the change using a
+<code class="language-plaintext highlighter-rouge">transition()</code> (covered more next week).
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> let transition_length = 2000;
+
+ d3.select("#changeme")
+   .transition()
+   .duration(transition_length)
+   .attr("fill", "#e34234");
+
+ d3.selectAll(".wide")
+   .transition()
+   .duration(transition_length)
+   .attr("stroke-width", 20);
+
+ d3.selectAll(".narrow")
+   .transition()
+   .duration(transition_length)
+   .attr("stroke-width", 1);
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-transition.html" width="500" height="400"></iframe>
+  </li>
+  <li>A special type of modification can be done for text elements. Instead of
+changing the attributes of the element, we can change the text that appears
+between the open and closing tags using the <code class="language-plaintext highlighter-rouge">.text()</code> function. The source html
+page,</li>
+</ol>
+
+<p><code class="language-plaintext highlighter-rouge">textChange.html</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  &lt;!DOCTYPE html&gt;
+  &lt;html&gt;
+    &lt;head&gt;
+      &lt;script src="https://d3js.org/d3.v7.min.js"&gt;&lt;/script&gt;
+      &lt;script src="https://d3js.org/d3-selection-multi.v1.min.js"&gt;&lt;/script&gt;
+      &lt;link rel="stylesheet" href="textChange.css"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+      &lt;h1&gt;Change me!&lt;/h1&gt;
+    &lt;/body&gt;
+    &lt;script src="textChange.js"&gt;&lt;/script&gt;
+  &lt;/html&gt;
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">textChange.js</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("h1")
+  .transition()
+  .delay(2000)
+  .text("you are changed!!")
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">textChange.css</code> (for the fancy font)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@import url('https://fonts.googleapis.com/css2?family=Pacifico&amp;display=swap');
+
+h1 {
+  font-family: 'Pacifico', cursive;
+  font-size: 100px;
+}
+</code></pre></div></div>
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/textChange.html" width="500" height="400"></iframe>
+
+<ol>
+  <li>We can remove all elements in a selection using <code class="language-plaintext highlighter-rouge">.exit()</code>. For example, this
+removes the circle in our first example.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#changeme").exit()
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Moreover, we can add new tags below current selections. Conceptually, we
+think of the D3 selection as taking us to a specific node in the DOM tree, and
+at this position, we append a new leaf. For example, the script below creates a
+new path and paragraph element on the first html page.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("g")
+  .append("path")
+  .attrs({
+    class: "wide",
+    d: "M 100 0 L 200 5 L 300 15 L 400 0",
+    "stroke": "#008b8b"
+  })
+</code></pre></div>    </div>
+    <p>Notice that the <code class="language-plaintext highlighter-rouge">stroke</code> attribute in the newly appended tag overrules the
+stroke specified by its class (<code class="language-plaintext highlighter-rouge">wide</code>) in the accompanying css.</p>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-append.html" width="500" height="500"></iframe>
+
+<ol>
+  <li>A common trick is to fade an element in by appending it invisibly and then
+transitioning to visible. The first <code class="language-plaintext highlighter-rouge">.attrs()</code> call below creates an invisible
+(<code class="language-plaintext highlighter-rouge">width = 0</code>) path at the correct location, the second call increases the wide
+and sets the class (to make the line purple).
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("g")
+  .append("path")
+  .attrs({
+    "stroke-width": 0,
+    d: "M 100 0 L 200 5 L 300 15 L 400 0",
+  })
+  .transition()
+  .duration(1000)
+  .attrs({
+    "stroke-width": 20,
+    class: "wide"
+  })
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week4/week4-3/modifySelection-smooth-append.html" width="500" height="500"></iframe>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,44 @@
+---
+title: ""
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+theme_set(theme_bw())
+set.seed(1234)
+```
+    
+This problem will study a dataset from MIT's [living wage
+calculator](https://livingwage.mit.edu/). Each row in this
+[dataset](https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week10/exercises/living_wages.csv)
+gives living wages for state capitals within the continental US. Since living
+wages depend on a personal situation (e.g., number of children), this dataset is
+high-dimensional. The interpretation of each column is 
+[here](https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week10/exercises/living_wages_lookup.csv).
+
+
+```{r}
+living_wages <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week10/exercises/living_wages.csv")
+lookup <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week10/exercises/living_wages_lookup.csv")
+living_wages
+```
+
+a. Define a tidymodels `recipe` that normalizes all city features and
+specifies that PCA should be performed.
+
+b. Visualize the top 4 principal components. Based on the interpretation of each
+columns, what seems to distinguish capital cities with low vs. high values of
+PC2?
+
+```{r, fig.height = 8.5}
+```
+
+c. Visualize the scores of each capital city with respect to the first two
+principal components. Make sure to annotate cities with their names. Pick a city
+on the graph and interpret its relative wage profile based on the principal
+components.
+    
+```{r, eval = FALSE, fig.width = 10, fig.height = 5}
+```

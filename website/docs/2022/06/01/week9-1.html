@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Manipulating Graph Data | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Manipulating Graph Data</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Reading and modifying graph data</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week9-1.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%209%20-%201%3A%20Manipulating%20Graph%20Data/1_co3nvevc">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidygraph)
+library(ggraph)
+theme_set(theme_bw())
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Before diving into graph data visualization, let’s get some
+experience manipulating graphs hands on. One of the best R packages
+for graph manipulation is called <code class="language-plaintext highlighter-rouge">tidygraph</code>. The goal of this
+package is to extend the semantics of the tidyverse to
+graph-structured data. We can’t simply use the standard <code class="language-plaintext highlighter-rouge">dplyr</code>
+functions because graphs cannot be stored in simple data.frames –
+any graph must be represented by two data structures, a set of nodes
+and a set of edges.</p>
+  </li>
+  <li>
+    <p>This can be usefully organized as a pair of <code class="language-plaintext highlighter-rouge">data.frames</code>, and the
+<code class="language-plaintext highlighter-rouge">tidygraph</code> structure represents graphs in exactly this way. For
+example, <code class="language-plaintext highlighter-rouge">G</code> below is a tidy graph structure showing the friendship
+connections between 70 students in a high school over two years. The
+<code class="language-plaintext highlighter-rouge">Node Data</code> component gives features for each student (in this case,
+just the name), while <code class="language-plaintext highlighter-rouge">Edge Data</code> represents friendship links
+between students.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G &lt;- as_tbl_graph(highschool)
+G
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # A directed multigraph with 1 component
+## #
+## # Node Data: 70 × 1 (active)
+##   name 
+##   &lt;chr&gt;
+## 1 1    
+## 2 2    
+## 3 3    
+## 4 4    
+## 5 5    
+## 6 6    
+## # … with 64 more rows
+## #
+## # Edge Data: 506 × 3
+##    from    to  year
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+## 1     1    13  1957
+## 2     1    14  1957
+## 3     1    20  1957
+## # … with 503 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>The beauty of this data structure is that we can define the analogs
+of the usual tidyverse verbs for it. For example, we can derive a
+new node attribute using <code class="language-plaintext highlighter-rouge">mutate</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %&gt;%
+  mutate(favorite_color = sample(c("red", "blue"), n(), replace = TRUE))
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # A directed multigraph with 1 component
+## #
+## # Node Data: 70 × 2 (active)
+##   name  favorite_color
+##   &lt;chr&gt; &lt;chr&gt;         
+## 1 1     red           
+## 2 2     blue          
+## 3 3     red           
+## 4 4     red           
+## 5 5     blue          
+## 6 6     red           
+## # … with 64 more rows
+## #
+## # Edge Data: 506 × 3
+##    from    to  year
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+## 1     1    13  1957
+## 2     1    14  1957
+## 3     1    20  1957
+## # … with 503 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>What if we want to mutate the edges instead? We have to tell
+tidygraph to “activate” the edge set,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %&gt;%
+  activate(edges) %&gt;%
+  mutate(weight = runif(n()))
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # A directed multigraph with 1 component
+## #
+## # Edge Data: 506 × 4 (active)
+##    from    to  year weight
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1     1    13  1957 0.983 
+## 2     1    14  1957 0.0474
+## 3     1    20  1957 0.349 
+## 4     1    52  1957 0.306 
+## 5     1    53  1957 0.322 
+## 6     2    20  1957 0.209 
+## # … with 500 more rows
+## #
+## # Node Data: 70 × 1
+##   name 
+##   &lt;chr&gt;
+## 1 1    
+## 2 2    
+## 3 3    
+## # … with 67 more rows
+</code></pre></div>    </div>
+
+    <p>To avoid these activate calls, a convenient shorthand is calling
+mutate with <code class="language-plaintext highlighter-rouge">%N&gt;%</code> and <code class="language-plaintext highlighter-rouge">%E&gt;%</code> for modifying node and edge data,
+respectively,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %E&gt;%
+  mutate(weight = runif(n()))
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # A directed multigraph with 1 component
+## #
+## # Edge Data: 506 × 4 (active)
+##    from    to  year weight
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1     1    13  1957 0.0379
+## 2     1    14  1957 0.896 
+## 3     1    20  1957 0.309 
+## 4     1    52  1957 0.150 
+## 5     1    53  1957 0.489 
+## 6     2    20  1957 0.0534
+## # … with 500 more rows
+## #
+## # Node Data: 70 × 1
+##   name 
+##   &lt;chr&gt;
+## 1 1    
+## 2 2    
+## 3 3    
+## # … with 67 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>There are many other verbs that have been defined for tidygraph
+objects. For example, we can join two graphs together.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## initialize two simple graphs
+G1 &lt;- create_ring(10)  %N&gt;%
+  mutate(id = LETTERS[1:n()])
+G2 &lt;- create_bipartite(4, 2) %&gt;%
+  mutate(id = LETTERS[1:n()])
+
+## join them together
+G1 %&gt;%
+  graph_join(G2)
+
+## # A tbl_graph: 10 nodes and 18 edges
+## #
+## # A directed acyclic multigraph with 1 component
+## #
+## # Node Data: 10 × 2 (active)
+##   id    type 
+##   &lt;chr&gt; &lt;lgl&gt;
+## 1 A     FALSE
+## 2 B     FALSE
+## 3 C     FALSE
+## 4 D     FALSE
+## 5 E     TRUE 
+## 6 F     TRUE 
+## # … with 4 more rows
+## #
+## # Edge Data: 18 × 2
+##    from    to
+##   &lt;int&gt; &lt;int&gt;
+## 1     1     2
+## 2     2     3
+## 3     3     4
+## # … with 15 more rows
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-1/unnamed-chunk-8-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Similarly, we can filter nodes or edges based on their attributes.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %E&gt;%
+  mutate(weight = runif(n())) %&gt;%
+  filter(weight &lt; 0.2) %&gt;%
+  arrange(-weight)
+
+## # A tbl_graph: 70 nodes and 113 edges
+## #
+## # A directed multigraph with 6 components
+## #
+## # Edge Data: 113 × 4 (active)
+##    from    to  year weight
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1    29    38  1958  0.198
+## 2    46    28  1957  0.196
+## 3    69    65  1958  0.195
+## 4     7    16  1957  0.194
+## 5    52    47  1957  0.192
+## 6    59    56  1957  0.191
+## # … with 107 more rows
+## #
+## # Node Data: 70 × 1
+##   name 
+##   &lt;chr&gt;
+## 1 1    
+## 2 2    
+## 3 3    
+## # … with 67 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>It’s possible to perform simple graph algorithms using these verbs.
+For example, we can cluster nodes based on their connection
+structure.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %&gt;%
+  to_undirected() %&gt;%
+  mutate(cluster = group_louvain())
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # An undirected multigraph with 1 component
+## #
+## # Node Data: 70 × 2 (active)
+##   name  cluster
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 1           1
+## 2 2           1
+## 3 3           1
+## 4 4           2
+## 5 5           2
+## 6 6           1
+## # … with 64 more rows
+## #
+## # Edge Data: 506 × 3
+##    from    to  year
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+## 1     1    13  1957
+## 2     1    14  1957
+## 3     1    20  1957
+## # … with 503 more rows
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-1/unnamed-chunk-11-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We can even map over nodes to compute topological queries. For
+example, the block below computes the number of neighbors within two
+steps of each node, using the <a href="https://tidygraph.data-imaginist.com/reference/local_graph.html"><code class="language-plaintext highlighter-rouge">local_size</code>
+function</a>.
+More general operations can be computed using map operations, like
+<a href="https://tidygraph.data-imaginist.com/reference/map_local.html"><code class="language-plaintext highlighter-rouge">map_local</code></a>
+or
+<a href="https://tidygraph.data-imaginist.com/reference/map_bfs.html"><code class="language-plaintext highlighter-rouge">map_bfs</code></a>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G %&gt;%
+  mutate(two_steps = local_size(order = 2))
+
+## # A tbl_graph: 70 nodes and 506 edges
+## #
+## # A directed multigraph with 1 component
+## #
+## # Node Data: 70 × 2 (active)
+##   name  two_steps
+##   &lt;chr&gt;     &lt;dbl&gt;
+## 1 1            32
+## 2 2            21
+## 3 3            12
+## 4 4            24
+## 5 5            31
+## 6 6            25
+## # … with 64 more rows
+## #
+## # Edge Data: 506 × 3
+##    from    to  year
+##   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+## 1     1    13  1957
+## 2     1    14  1957
+## 3     1    20  1957
+## # … with 503 more rows
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

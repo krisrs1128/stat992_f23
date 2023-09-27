@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Linked Brushing | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Linked Brushing</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>More examples defining brush queries using Shiny and <code class="language-plaintext highlighter-rouge">ggplot2</code>.</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week3-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%203%20-%203%3A%20Linked%20Brushing/1_jdtr6xg6">Recording</a></p>
+
+<ol>
+  <li>
+    <p>These notes provide more realistic examples of linked brushing.
+Though the visual design problems they address are more complex,
+they follow the same recipe described earlier,</p>
+
+    <ul>
+      <li>A <code class="language-plaintext highlighter-rouge">reactiveVal</code> is defined to track the currently selected
+samples.</li>
+      <li>An <code class="language-plaintext highlighter-rouge">observeEvent</code> is used to update the <code class="language-plaintext highlighter-rouge">reactiveVal</code> every time
+a plot is brushed.</li>
+      <li>Downstream <code class="language-plaintext highlighter-rouge">render</code> contexts update plot and data table outputs
+whenever the <code class="language-plaintext highlighter-rouge">reactiveVal</code> is changed.</li>
+    </ul>
+  </li>
+  <li>
+    <p>The first example implements linked brushing on the movie ratings
+dataset presented earlier. Before we used a slider to select movies
+within a user-specified time range. Our graphical alternative is to
+allow selections over a histogram of movie release dates within the
+dataset. Specifically, we will create an interactive version of the
+histogram below,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(lubridate)
+
+movies &lt;- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_posts/2022-02-10-week04-03/apps/data/movies.csv") %&gt;%
+  mutate(
+    date = as_date(Release_Date, format = "%b %d %Y"),
+    year = year(date),
+    Major_Genre = fct_explicit_na(Major_Genre)
+  )
+
+movies %&gt;% 
+  count(year) %&gt;%
+  ggplot(aes(year, n)) +
+  geom_bar(stat = "identity", width = 1) +
+  scale_y_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week3-3/unnamed-chunk-2-1.png" alt="" /></p>
+
+    <p>and when a subset of years of has been brushed, we will highlight
+the corresponding movies in the same kind of scatterplot used in the
+earlier, slider-based implementation.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(movies) +
+  geom_point(aes(Rotten_Tomatoes_Rating, IMDB_Rating))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week3-3/unnamed-chunk-3-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Viewed more abstractly, we are going to use a brush to link the
+histogram and scatterplot views. We will be able to evaluate the
+change in a visualization (the scatterplot) after “conditioning” on
+a subset defined by a complementary view (the histogram). This is
+analogous to the penguins dataset example – only the form of the
+base plots has changed.</p>
+  </li>
+  <li>
+    <p>The main logic needed to link these views is given in the block
+below. The histogram <code class="language-plaintext highlighter-rouge">plotOutput</code> in the UI is given a brush which
+will be used to select years[1]. We use the <code class="language-plaintext highlighter-rouge">selected</code> reactive
+value to store a list of <code class="language-plaintext highlighter-rouge">TRUE/FALSE</code>’s indicating which movie falls
+into the currently brushed time range. Each time the brushed range
+is changed, the <code class="language-plaintext highlighter-rouge">output$scatterplot</code> and <code class="language-plaintext highlighter-rouge">output$table</code> outputs are
+regenerated, highlighting those movies that appear in the
+<code class="language-plaintext highlighter-rouge">selected()</code> list.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ui &lt;- fluidPage(
+  fluidRow(
+    column(6, plotOutput("histogram", brush = brushOpts("plot_brush", direction = "x"))),
+    column(6, plotOutput("scatterplot"))
+  ),
+  dataTableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  selected &lt;- reactiveVal(rep(TRUE, nrow(movies)))
+
+  observeEvent(
+    input$plot_brush,
+    selected(reset_selection(movies, input$plot_brush))
+  )
+
+  output$histogram &lt;- renderPlot(histogram(movies))
+  output$scatterplot &lt;- renderPlot(scatterplot(movies, selected()))
+  output$table &lt;- renderDataTable(data_table(movies, selected()))
+}
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We haven’t included the full code for <code class="language-plaintext highlighter-rouge">histogram</code>, <code class="language-plaintext highlighter-rouge">scatterplot</code>,
+and <code class="language-plaintext highlighter-rouge">data_table</code>, since they in and of themselves don’t require any
+logic for interactivity. You can try out the full code
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week3/3-3/3-3-1/app.R">here</a>
+and tinker with the interface below.</p>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/1014c0e9-cf88-4b8d-93a6-52fd77669c23/" allowfullscreen="" data-external="1" height="700" width="600"></iframe>
+  </li>
+  <li>
+    <p>A natural extension of the previous app is to allow brushing on both
+the histogram and the scatterplot. Brushing over the scatterplot
+would show the years during which the selected movies were released
+– this can be used to find out if very poorly or highly rated movies
+are associated with specific time ranges, for example.</p>
+  </li>
+  <li>
+    <p>The updated application is below. The main differences are that,</p>
+
+    <ul>
+      <li>The scatterplot <code class="language-plaintext highlighter-rouge">plotOutput</code> now includes a brush.</li>
+      <li>We are passing in the reactive value of the <code class="language-plaintext highlighter-rouge">selected()</code> movies
+into the histogram as well.</li>
+    </ul>
+
+    <!-- -->
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ui &lt;- fluidPage(
+  fluidRow(
+    column(6, plotOutput("histogram", brush = brushOpts("plot_brush", direction = "x"))),
+    column(6, plotOutput("scatterplot", brush = "plot_brush"))
+  ),
+  dataTableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  selected &lt;- reactiveVal(rep(TRUE, nrow(movies)))
+
+  observeEvent(
+    input$plot_brush,
+    selected(reset_selection(movies, input$plot_brush))
+  )
+
+  output$histogram &lt;- renderPlot(histogram(movies, selected()))
+  output$scatterplot &lt;- renderPlot(scatterplot(movies, selected()))
+  output$table &lt;- renderDataTable(data_table(movies, selected()))
+}
+
+shinyApp(ui, server)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>For the scatterplot, we simply reduced the transparency for the
+movies that weren’t selected. We cannot do this for the histogram,
+though, because the movies are not directly represented in this
+plot, only their counts over time. Instead, our idea will be to draw
+two overlapping histograms. A static one in the background will
+represent the year distribution before any selection. A changing one
+in the foreground will be redrawn whenever the selected movies are
+changed. For example, the code below overlays two <code class="language-plaintext highlighter-rouge">geom_bar</code> layers,
+with one corresponding only to the first 500 movies in the dataset.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  sub_counts &lt;- movies[1:500, ] %&gt;%
+    count(year)
+
+  movies %&gt;%
+    count(year) %&gt;%
+    ggplot(aes(year, n)) +
+    geom_bar(stat = "identity", fill = "#d3d3d3", width = 1) +
+    geom_bar(data = sub_counts, stat = "identity", width = 1) +
+    scale_y_continuous(expand = c(0, 0))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week3-3/unnamed-chunk-6-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Combining these ideas leads to the app
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week3/3-3/3-3-2/app.R">here</a>
+and included below. Try brushing on both the scatterplot and the
+histogram. The especially interesting thing about this approach is
+that, without introducing any new screen elements, we’ve widened the
+class of questions of that can be answered. In a sense, we’ve
+increased the information density of the display – we can present
+more information without having to introduce any peripheral UI
+components or graphical marks.</p>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/fae55716-8e52-4f6e-ae29-4db14c063002/" allowfullscreen="" data-external="1" height="700" width="600">
+</iframe>
+  </li>
+  <li>
+    <p>In our last problem, we would like to use a dataset of flight delays
+to understand what characteristics of the flights make some more /
+less likely to be delayed. The basic difficulty is that there are
+many potentially relevant variables, and they might interact in ways
+that are not obvious in advance.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(nycflights13)
+head(flights)
+
+## # A tibble: 6 × 19
+##    year month   day dep_time sched_dep…¹ dep_d…² arr_t…³ sched…⁴ arr_d…⁵ carrier
+##   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;       &lt;int&gt;   &lt;dbl&gt;   &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  
+## 1  2013     1     1      517         515       2     830     819      11 UA     
+## 2  2013     1     1      533         529       4     850     830      20 UA     
+## 3  2013     1     1      542         540       2     923     850      33 AA     
+## 4  2013     1     1      544         545      -1    1004    1022     -18 B6     
+## 5  2013     1     1      554         600      -6     812     837     -25 DL     
+## 6  2013     1     1      554         558      -4     740     728      12 UA     
+## # … with 9 more variables: flight &lt;int&gt;, tailnum &lt;chr&gt;, origin &lt;chr&gt;,
+## #   dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;, hour &lt;dbl&gt;, minute &lt;dbl&gt;,
+## #   time_hour &lt;dttm&gt;, and abbreviated variable names ¹​sched_dep_time,
+## #   ²​dep_delay, ³​arr_time, ⁴​sched_arr_time, ⁵​arr_delay
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Our solution strategy will be to dynamically link complementary
+histograms. By brushing the histogram of delays time, we’ll be able
+to see the conditional distributions for other variables of
+interest. In principle, we could do this for every variable in the
+dataset, but for the example, we’ll focus on just the scheduled
+departure time and flight distance.</p>
+  </li>
+  <li>
+    <p>The UI in this case creates three separate histograms, each of which
+introduces a brush. We will plan on brushing one histogram at a
+time, which is then used to update overlays on each.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ui &lt;- fluidPage(
+  fluidRow(
+    column(
+      6, 
+      plotOutput("h1", brush = brushOpts("plot_brush", direction = "x"), height = 200),
+      plotOutput("h2", brush = brushOpts("plot_brush", direction = "x"), height = 200),
+      plotOutput("h3", brush = brushOpts("plot_brush", direction = "x"), height = 200)
+    ),
+    column(6, dataTableOutput("table"))
+  ),
+)
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>The logic for drawing the overlays is encapsulated by the functions
+below. The <code class="language-plaintext highlighter-rouge">bar_plot</code> function draws two bar plots over one another,
+one referring to a global <code class="language-plaintext highlighter-rouge">counts</code> object of unchanging histogram
+bar heights. The second refers to the bar heights for the
+continually updated overlays. Notice that we use <code class="language-plaintext highlighter-rouge">.data[[v]]</code> to use
+variable names encoded in strings. The <code class="language-plaintext highlighter-rouge">plot_overlay</code> function
+provides the histogram bar heights for variable <code class="language-plaintext highlighter-rouge">v</code> after brushing
+over the flights in <code class="language-plaintext highlighter-rouge">selected_</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bar_plot &lt;- function(sub_flights, v) {
+  ggplot(counts[[v]], aes(.data[[v]], n)) +
+    geom_bar(fill = "#d3d3d3", stat = "identity") +
+    geom_bar(data = sub_flights, stat = "identity")
+}
+
+plot_overlay &lt;- function(selected_, v) {
+  flights %&gt;%
+    filter(selected_) %&gt;%
+    count(.data[[v]]) %&gt;%
+    bar_plot(v)
+}
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Code for the full application is linked
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week3/3-3/3-3-3/app.R">here</a>.
+Thanks to shiny’s <code class="language-plaintext highlighter-rouge">reactiveVal</code> and <code class="language-plaintext highlighter-rouge">brushedPoints</code> definitions,
+implementing interactivity only requires about 20 lines (starting
+from <code class="language-plaintext highlighter-rouge">ui &lt;- ...</code> to the end). The rest of the code is used to draw
+new static plots depending on the current selection.</p>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/02da9288-2810-4ce8-b92c-75177bb4cdc9/" allowfullscreen="" data-external="1" height="700" width="600"></iframe>
+  </li>
+</ol>
+
+<p>[1] Note that we restrict brush motion to the <em>x</em>-direction. This is
+because the <em>x</em> direction alone encodes year information, which we want
+to select.</p>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

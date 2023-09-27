@@ -1,0 +1,14 @@
+
+#scatter circle {
+  r: 2;
+}
+
+#curves path {
+  stroke-width: 2;
+  stroke: #F27649;
+  fill: none;
+}
+
+#ribbon path {
+  fill: #F2DCC2;
+}

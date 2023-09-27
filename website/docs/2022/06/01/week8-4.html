@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Geospatial Interaction | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Geospatial Interaction</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Idioms for interacting with geographic data</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week8-4.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%208%20-%204%3A%20Geospatial%20Interaction/1_e0i2pm2s">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(leaflet)
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Maps can be information dense, so it’s often useful to make them
+interactive. These notes review some basic strategies for
+interactive spatial data visualization.</p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">leaflet</code> is an easy-to-use R package that’s often sufficient for
+routine visualization. It offers several types of marks (marks,
+circles, polygons) and allows them to encode fields in a dataset.
+Note that its interface is more like base R than ggplot2 — we
+specify each attribute in one plot command. For example, in the code
+block below, <code class="language-plaintext highlighter-rouge">addTiles</code> fetches the background map. addCircles
+overlays the new vector features on top of the map. It’s worth
+noting that the vector features were created automatically – there
+was no need to create or read in any type of sf object.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cities &lt;- read_csv("https://uwmadison.box.com/shared/static/j98anvdoasfb1h651qxzrow2ua45oap1.csv")
+leaflet(cities) %&gt;%
+  addTiles() %&gt;%
+  addCircles(
+    lng = ~Long,
+    lat = ~Lat,
+    radius = ~sqrt(Pop) * 30
+  )
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat479/posts/2021-03-02-week7-5/#htmlwidget-d84747f10a4e7901e20d" data-external="1" width="400" height="500"></iframe>
+  </li>
+  <li>
+    <p>Leaflet maps can be <a href="https://rstudio.github.io/leaflet/shiny.html">embedded into Shiny
+apps</a> using
+<code class="language-plaintext highlighter-rouge">leafletOutput</code> and <code class="language-plaintext highlighter-rouge">renderLeaflet</code>. For example, the Superzip
+Explorer is a visualization designed for showing income and
+education levels across ZIP codes in the US. In the
+<a href="https://github.com/rstudio/shiny-examples/blob/main/063-superzip-example/server.R">server</a>,
+the map is initialized using the leaflet command (without even
+adding any data layers).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Create the map
+output$map &lt;- renderLeaflet({
+  leaflet() %&gt;%
+    addTiles() %&gt;%
+    setView(lng = -93.85, lat = 37.45, zoom = 4)
+})
+</code></pre></div>    </div>
+
+    <iframe src="https://shiny.rstudio.com/gallery/superzip-example.html" data-external="1" width="900" height="600"></iframe>
+  </li>
+  <li>
+    <p>The most interesting aspect of the explorer is that it lets us zoom
+into regions and study properties of ZIP codes within the current
+view. leaflet automatically creates an <code class="language-plaintext highlighter-rouge">input$map_bounds</code> input
+which is triggered anytime we pan or zoom the map. It returns a
+subset of the full dataset within the current view.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>zipsInBounds &lt;- reactive({
+  if (is.null(input$map_bounds)) return(zipdata[FALSE,]) # return empty data
+  bounds &lt;- input$map_bounds
+  latRng &lt;- range(bounds$north, bounds$south)
+  lngRng &lt;- range(bounds$east, bounds$west)
+
+  # filters to current view
+  subset(zipdata,
+    latitude &gt;= latRng[1] &amp; latitude &lt;= latRng[2] &amp;
+      longitude &gt;= lngRng[1] &amp; longitude &lt;= lngRng[2])
+})
+</code></pre></div>    </div>
+
+    <p>Whenever this reactive is run, the histogram (<code class="language-plaintext highlighter-rouge">output$histCentile</code>)
+and scatterplot (<code class="language-plaintext highlighter-rouge">output$scatterCollegeIncome</code>) on the side of the
+app are updated.</p>
+  </li>
+  <li>
+    <p>Notice that an observer was created to monitor any interactions with
+the map. Within this observe block, a <code class="language-plaintext highlighter-rouge">leafletProxy</code> call is used.
+This function makes it possible to modify a leaflet map without
+redrawing the entire map. It helps support efficient rendering –
+we’re able to change the colors of the circles without redrawing the
+entire leaflet view.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>leafletProxy("map", data = zipdata) %&gt;%
+  clearShapes() %&gt;%
+  addCircles(~longitude, ~latitude, radius=radius, layerId=~zipcode,
+    stroke=FALSE, fillOpacity=0.4, fillColor=pal(colorData)) %&gt;%
+  addLegend("bottomleft", pal=pal, values=colorData, title=colorBy,
+    layerId="colorLegend")
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>We can often dynamically query spatial data. Querying a map can
+highlight properties of samples within a geographic region. For
+example, here is a map of in which each US county has been
+associated with a (random) pair of data features. Clicking on
+counties (or hovering with the shift key pressed) updates the bars
+on the right. Each bar shows the average from one of the data
+fields, across all selected counties.</p>
+
+    <iframe width="100%" height="556" frameborder="0" src="https://observablehq.com/embed/@krisrs1128/geojson-mouseover?cells=output"></iframe>
+  </li>
+  <li>
+    <p>This linking is accomplished using event listeners. For example, the
+map includes the call <code class="language-plaintext highlighter-rouge">.on("mouseover", update_selection)</code>, and
+<code class="language-plaintext highlighter-rouge">update_selection</code> changes the fill of the currently hovered county,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>svg.selectAll("path")
+  .attr("fill", (d) =&gt; selected.indexOf(d.id) == -1 ? "#f7f7f7" : "#4a4a4a");
+</code></pre></div>    </div>
+
+    <p>The full implementation can be read
+<a href="https://observablehq.com/@krisrs1128/geojson-mouseover">here</a>. Note
+that interactivity here is done just like in any other D3
+visualization. We can treat the map as just another collection of
+SVG paths, and all our interaction events behave in the same way.</p>
+  </li>
+  <li>
+    <p>We can also imagine selecting geographic regions by interacting with
+linked views. This is used in Nadieh Bremer’s Urbanization in East
+Asia <a href="http://nbremer.github.io/urbanization/">visualization</a>, for
+example, where we can see all the urban areas within a country by
+hovering its associated bar.</p>
+
+    <iframe width="600" height="400" src="https://www.youtube.com/embed/Z0K_H_zjcYo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+  </li>
+  <li>
+    <p>Here is a somewhat more complex version of the earlier random data
+example where acounties are associated with (random) time series.
+Redrawing the lower and upper bounds on the time series changes
+which counties are highlighted.</p>
+
+    <iframe width="800" height="584" frameborder="0" src="https://observablehq.com/embed/@krisrs1128/geo-time-selection?cells=chart"></iframe>
+  </li>
+  <li>
+    <p>Though it’s not exactly interaction, another common strategy for
+spatiotemporal data is animation. The major trends often become
+apparent by visualizing the flow of visual marks on the screen. For
+example, how can we visualize where football players go on a field
+before they score a goal? One approach is to animate the
+trajectories leading up to the goal. Here is one beautiful
+visualization (in D3!) by Karim Douieb that shows the most common
+paths and the speed at which the players run.</p>
+
+    <iframe width="100%" height="718" frameborder="0" src="https://observablehq.com/embed/dfbbfbde8609dd9e?cells=output"></iframe>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

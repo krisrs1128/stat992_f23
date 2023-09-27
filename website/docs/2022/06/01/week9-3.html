@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Tree Representations | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Tree Representations</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>An important special case of graph data visualization</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week9/week9-1">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%209%20-%203%3A%20Tree%20Representations/1_0dtb6zo3">Recording</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidygraph)
+library(ggraph)
+library(patchwork)
+theme_set(theme_bw())
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Formally, trees are a special type of graph which have no cycles
+(paths starting at one node that can return without retracing any
+steps). Informally, they can be thought of as hierarchies descending
+from a “root” node. These notes review some techniques for
+visualizing tree structured data.</p>
+  </li>
+  <li>
+    <p>One approach is to encode each node’s depth in the tree by using
+vertical or radial position. To illustrate, we’ll work with the
+following dataset, which shows the directory structure of an open
+source software package called <code class="language-plaintext highlighter-rouge">flare</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>G_flare &lt;- tbl_graph(flare$vertices, flare$edges)
+G_flare
+
+## # A tbl_graph: 252 nodes and 251 edges
+## #
+## # A rooted tree
+## #
+## # Node Data: 252 × 3 (active)
+##   name                                          size shortName            
+##   &lt;chr&gt;                                        &lt;dbl&gt; &lt;chr&gt;                
+## 1 flare.analytics.cluster.AgglomerativeCluster  3938 AgglomerativeCluster 
+## 2 flare.analytics.cluster.CommunityStructure    3812 CommunityStructure   
+## 3 flare.analytics.cluster.HierarchicalCluster   6714 HierarchicalCluster  
+## 4 flare.analytics.cluster.MergeEdge              743 MergeEdge            
+## 5 flare.analytics.graph.BetweennessCentrality   3534 BetweennessCentrality
+## 6 flare.analytics.graph.LinkDistance            5731 LinkDistance         
+## # … with 246 more rows
+## #
+## # Edge Data: 251 × 2
+##    from    to
+##   &lt;int&gt; &lt;int&gt;
+## 1   221     1
+## 2   221     2
+## 3   221     3
+## # … with 248 more rows
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>In ggraph, this kind of visualization is constructed using the same
+type of node-link geoms as before. We can organize nodes by depth
+(distance from the root) by specifying that the layout be <code class="language-plaintext highlighter-rouge">tree</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>p1 &lt;- ggraph(G_flare, "tree") +
+  geom_edge_link() +
+  geom_node_label(aes(label = shortName), size = 3)
+
+p2 &lt;- ggraph(G_flare, "tree", circular = TRUE) +
+  geom_edge_link() +
+  geom_node_label(aes(label = shortName), size = 3)
+
+p1 | p2
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-3/unnamed-chunk-4-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>How can we begin to make similar figures with D3? We need to be able
+to find coordinates for both nodes and links across the tree. Once
+we have these coordinates, we can append corresponding <code class="language-plaintext highlighter-rouge">circle</code> and
+<code class="language-plaintext highlighter-rouge">path</code> SVG elements. There are three main steps before we can reach
+this point,</p>
+
+    <ul>
+      <li>Convert the flat array containing the list of edges into a
+stratified JS object that can be input to the next steps. This
+is done with <code class="language-plaintext highlighter-rouge">d3.stratify()</code>. The resulting stratified object
+also includes many useful helper methods, like calculation of
+all the descendants of a node or identification of which nodes
+are leaves.</li>
+      <li>Given the stratified object, define the tree layout. It also
+associates each node with an <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> pixel coordinate. This
+can be done with <code class="language-plaintext highlighter-rouge">d3.tree()</code>.</li>
+      <li>If we want smooth edges between parent and child nodes, we need
+a path generator. This generator is used to define the <code class="language-plaintext highlighter-rouge">d</code>
+attributes of the SVG paths for each link. This can be done
+using <code class="language-plaintext highlighter-rouge">d3.linkVertical()</code> (for vertical trees) or
+<code class="language-plaintext highlighter-rouge">d3.linkHorizontal()</code> (for trees on their sides).</li>
+    </ul>
+  </li>
+  <li>
+    <p>For example, to draw a tree for the flare dataset, we start with a
+flat array of edges. Note that the first element is the root – the
+node with no parents,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[
+  {from: null, to: "flare"},
+  {from: "flare", to: "flare.analytics"},
+  {from: "flare", to: "flare.vis"},
+  {from: "flare.vis", to: "flare.vis.operator"},
+  ...
+]
+</code></pre></div>    </div>
+
+    <p>We define a function that stratifies this flat edge array using the
+following syntax. The <code class="language-plaintext highlighter-rouge">id</code> and <code class="language-plaintext highlighter-rouge">parentId</code> methods parse the
+parent-child relationship structure from each array element.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let stratifier = d3.stratify()
+  .id(d =&gt; d.to)
+  .parentId(d =&gt; d.from)
+</code></pre></div>    </div>
+
+    <p>Calling the stratifier on the original edgelist creates the nested
+data structure shown below. Notice that it has automatically
+calculated many useful properties, like the node’s depth in the tree
+and the data from its parent.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>stratifier(edge_array)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-3/stratified.png" width="727" style="display: block; margin: auto;" /></p>
+  </li>
+  <li>
+    <p>The really wonderful thing about the stratified object is that it
+includes many <a href="https://github.com/d3/d3-hierarchy/blob/main/README.md">helper
+methods</a>
+which allow us to avoid manually implementing common tree
+operations. For example, the call below will return the 22 nodes
+descending from the first child of the root (since the children are
+sorted alphabetically, this node is <code class="language-plaintext highlighter-rouge">flare.animate</code>).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>stratified = stratifier(data["edges"])
+stratified.children[0].descendants()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-3/descendants.png" width="914" /></p>
+  </li>
+  <li>
+    <p>Next, we call <code class="language-plaintext highlighter-rouge">d3.tree()</code> on the stratified object. This is what
+calculates the pixel coordinates of each node along the tree. The
+<code class="language-plaintext highlighter-rouge">.size()</code> method below specifies the maximum <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> coordinates
+of the final layout. In the screenshot below, you can see that the
+above <code class="language-plaintext highlighter-rouge">stratified</code> object now includes <code class="language-plaintext highlighter-rouge">.x</code> and <code class="language-plaintext highlighter-rouge">.y</code> attributes for
+each node.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tree_gen = d3.tree().size([600, 350])
+let tree = tree_gen(stratified)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-3/stratified_tree.png" width="708" /></p>
+  </li>
+  <li>
+    <p>In order to bind data using the general update pattern, we’re going
+to need convert these data back into arrays. Fortunately, there are
+two methods, <code class="language-plaintext highlighter-rouge">.links()</code> and <code class="language-plaintext highlighter-rouge">.descendants()</code>, which let us retrieve
+edge and node arrays from this stratified object. Unlike the edge
+data we had initially read in, this modified edge array also
+includes <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> coordinate information, thanks to the previous
+call to <code class="language-plaintext highlighter-rouge">d3.tree()</code>. For example, this will bind circles associated
+with each node in the tree.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("#tree")
+  .selectAll("circle")
+  .data(tree.descendants()).enter()
+  .append("circle")
+  .attrs({
+    cx: d =&gt; d.x,
+    cy: d =&gt; d.y,
+    ...
+  })
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>If we want curved edges, we can use a special path generator, called
+<code class="language-plaintext highlighter-rouge">d3.linkVertical()</code>, designed to draw tree links. The resulting tree
+is shown below. We could always have used a <code class="language-plaintext highlighter-rouge">d3.line()</code> generator to
+draw the path, but those edges would be straight paths from one node
+to the next.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let link_gen = d3.linkVertical()
+  .x(d =&gt; d.x)
+  .y(d =&gt; d.y);
+
+d3.select("#tree")
+  .selectAll("path")
+  .data(tree.links()).enter()
+  .append("path")
+  .attrs({
+    d: link_gen,
+    ...
+  })
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week9/week9-1/flare.html" width="600" height="350" data-external="1"></iframe>
+  </li>
+  <li>
+    <p>This seems like a lot of work just to create a simple tree. As usual
+with D3, the real value becomes apparent when we want to build in
+some interactivity. Here is an example of the same tree but which
+highlights all ancestor and descendant nodes whenever the mouse is
+moved near one node. We’ll over the details during a class demo – if
+you are curious, you can read the full implementation
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week9/week9-1/flare3.js">here</a>.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week9/week9-1/flare3.html" width="600" height="350" data-external="1"></iframe>
+  </li>
+  <li>
+    <p>We’ve spent quite a bit of time going over how to display trees
+using node-link diagrams. There is one other very common tree
+representation that is worth knowing: treemaps. The idea is to
+encode parent-child relationships using enclosure (i.e., the
+containment of some visual marks within others).</p>
+  </li>
+  <li>
+    <p>In the visualization below, each node is allocated an area, and all
+its children are drawn within that area (and so on, recursively,
+down to the leaves). The first two lines of code are the most
+important. The first says that we want to use a <code class="language-plaintext highlighter-rouge">treemap</code> layout,
+and the size of each node should reflect the <code class="language-plaintext highlighter-rouge">size</code> column in the
+nodes component of <code class="language-plaintext highlighter-rouge">G_flare</code>. The second line specifies visual
+encodings to add to each treemap tile – the color will reflect how
+deep we are into the tree.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    ggraph(G_flare, "treemap", weight = size) +
+      geom_node_tile(aes(fill = depth)) +
+      scale_fill_distiller(direction = 1) +
+      coord_fixed()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week9-3/unnamed-chunk-15-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>This is a particularly useful visualization when it’s important to
+visualize a continuous attribute associated with each node. In the
+above example, the size of each tile was was determined by the
+<code class="language-plaintext highlighter-rouge">size</code> variable. For example, a large node might correspond to a
+large part of a budget or a large directory in a filesystem. The
+main difficulty with using enclosure is that it becomes more
+difficult to trace the parent-child structure of the tree.
+Connections between nodes immediately stand out in the node-link
+diagram, but they require deliberate inspection when using treemaps.</p>
+  </li>
+  <li>
+    <p>In D3, the analogous code is generated using the <code class="language-plaintext highlighter-rouge">d3.treemap()</code>
+function. Though the layout is quite different, the way in which it
+is applied to a stratified data object is very similar to the use of
+<code class="language-plaintext highlighter-rouge">d3.tree()</code>. The source code can be read
+<a href="https://observablehq.com/@d3/nested-treemap">here</a> – note that
+<code class="language-plaintext highlighter-rouge">d3.stratify()</code> was not needed here, because the input data are
+already a stratified object (not just an array of edges).</p>
+
+    <iframe width="100%" height="600" frameborder="0" src="https://observablehq.com/embed/@d3/nested-treemap?cells=chart"></iframe>
+  </li>
+  <li>
+    <p>An intermediate between the node-link and the treemap approach is to
+use an icicle plot. In this approach, the distance from the root is
+still encoded using position, like in a node-link diagram. A
+continuous value can be associated with each descendant node and
+encoded encoded using the length of the associated rectangle. In
+ggraph, we can create this by specifying a “partition” layout.</p>
+  </li>
+</ol>
+
+<!-- -->
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggraph(G_flare, "partition", weight = size) +
+  geom_node_tile(aes(y = -y, fill = depth)) +
+  scale_fill_distiller(direction = 1)
+</code></pre></div></div>
+
+<p><img src="/stat679_notes/assets/week9-3/unnamed-chunk-16-1.png" alt="" /></p>
+
+<ol>
+  <li>
+    <p>In D3, we can create this kind of layout using
+<a href="https://observablehq.com/@d3/zoomable-icicle"><code class="language-plaintext highlighter-rouge">d3.partition()</code></a>,
+which behaves exactly like <code class="language-plaintext highlighter-rouge">d3.tree()</code> and <code class="language-plaintext highlighter-rouge">d3.treemap()</code>. That is,
+given a stratified JS object, it will add <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> associated
+with each node (but this time according to an icicle plot layout).</p>
+
+    <iframe width="100%" height="600" frameborder="0" src="https://observablehq.com/embed/@d3/zoomable-icicle?cells=chart"></iframe>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

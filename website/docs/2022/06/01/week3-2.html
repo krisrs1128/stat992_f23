@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Graphical Queries - Brush Events | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Graphical Queries - Brush Events</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>An introduction to brush events in Shiny</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week3-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%203%20-%202%3A%20Graphical%20Queries%20-%20Brush%20Events/1_y2dyjzbd">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Click events are useful for referring to individual samples.
+However, they are not ideal for referring to groups of samples. In
+this case, a useful type of plot input is a <code class="language-plaintext highlighter-rouge">brush</code>. This is a
+selection that can be defined by clicking and dragging over a
+region.</p>
+  </li>
+  <li>
+    <p>In shiny, brush events are treated similarly to click events. For
+example, to define a new brush input, we can set the <code class="language-plaintext highlighter-rouge">brush</code>
+argument to <code class="language-plaintext highlighter-rouge">plotOutput</code>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ui &lt;- fluidPage(
+  plotOutput("plot", brush = "plot_brush")
+)
+</code></pre></div>    </div>
+
+    <p>Just like the <code class="language-plaintext highlighter-rouge">click</code> argument, the value <code class="language-plaintext highlighter-rouge">"plot_brush"</code> is an ID
+that can be used in the server. Also like in click events, we can
+setup an observer to change a reactive value every time a brush is
+drawn[1]. The general pattern is similar to what we had before,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server &lt;- function(input, output) {
+  selected &lt;- reactiveVal(initial value)
+  observeEvent(
+    input$plot_brush,
+    ... computation using get new_value ...
+    selected(new_value)
+  )
+
+  output$plot &lt;- renderPlot(... use scatter() reactive val...)
+}
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>The example below is similar to the <code class="language-plaintext highlighter-rouge">plot_click</code> example from the
+previous notes. Instead of sorting points by proximity to the click,
+though, prints the subset of rows that have been currently brushed.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(shiny)
+mtcars &lt;- add_rownames(mtcars)
+
+reset_selection &lt;- function(x, brush) {
+  brushedPoints(x, brush, allRows = TRUE)$selected_
+}
+
+scatter &lt;- function(x, selected_) {
+  x %&gt;%
+    mutate(selected_ = selected_) %&gt;%
+    ggplot() +
+    geom_point(aes(mpg, hp, alpha = as.numeric(selected_))) +
+    scale_alpha(range = c(0.1, 1))
+}
+
+ui &lt;- fluidPage(
+  plotOutput("plot", brush = "plot_brush"),
+  dataTableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  selected &lt;- reactiveVal(rep(TRUE, nrow(mtcars)))
+  observeEvent(
+    input$plot_brush,
+    selected(reset_selection(mtcars, input$plot_brush))
+  )
+
+  output$plot &lt;- renderPlot(scatter(mtcars, selected()))
+  output$table &lt;- renderDataTable(filter(mtcars, selected()))
+}
+
+shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/a651bc7b-6773-445d-8bc6-22084155e21a/" allowfullscreen="" data-external="1" height="700" width="600"></iframe>
+  </li>
+  <li>
+    <p>It is often useful to combine multi-view composition (<em>i.e.</em>,
+faceting or compound figures) with dynamic queries. The basic idea
+is to (a) show different aspects of a dataset using different views,
+and then (b) link the views using dynamic queries. This strategy is
+sometimes called dynamic linking.</p>
+  </li>
+  <li>
+    <p>The example below implements dynamic linking with the penguins
+dataset. Brushing over either scatterplot highlights the
+corresponding points in the adjacent plot (it also updates the data
+table). This is a way of understanding structure beyond two
+dimensions. The implementation is similar to the brushing above,
+except that the reactive value <code class="language-plaintext highlighter-rouge">selected()</code> is called in two
+<code class="language-plaintext highlighter-rouge">renderPlot</code> contexts, leading to changes in both plots every time
+the brush is moved.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(shiny)
+penguins &lt;- read_csv("https://uwmadison.box.com/shared/static/ijh7iipc9ect1jf0z8qa2n3j7dgem1gh.csv")
+
+reset_selection &lt;- function(x, brush) {
+  brushedPoints(x, brush, allRows = TRUE)$selected_
+}
+
+scatter &lt;- function(x, selected_, var1, var2) {
+  x %&gt;%
+    mutate(selected_ = selected_) %&gt;%
+    ggplot(aes_string(var1, var2)) +
+    geom_point(aes(alpha = as.numeric(selected_), col = species)) +
+    scale_alpha(range = c(0.1, 1))
+}
+
+ui &lt;- fluidPage(
+  fluidRow(
+    column(6, plotOutput("scatter1", brush = "plot_brush")),
+    column(6, plotOutput("scatter2", brush = "plot_brush"))
+  ),
+  dataTableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  selected &lt;- reactiveVal(rep(TRUE, nrow(penguins)))
+  observeEvent(
+    input$plot_brush,
+    selected(reset_selection(penguins, input$plot_brush))
+  )
+
+  output$scatter1 &lt;- renderPlot({
+    scatter(penguins, selected(), "bill_length_mm", "bill_depth_mm")
+  })
+  output$scatter2 &lt;- renderPlot({
+    scatter(penguins, selected(), "flipper_length_mm", "body_mass_g")
+  })
+
+  output$table &lt;- renderDataTable(filter(penguins, selected()))
+}
+
+shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/8e4b07a5-d671-40cb-9d57-22d25533b8fe/" allowfullscreen="" data-external="1" height="800" width="600"></iframe>
+  </li>
+</ol>
+
+<p>[1] Technically, the code only executes when the mouse lifts off the
+brush selection. Some visualizations will be able to call the updating
+code every time the mouse is moved with the brush selected. This creates
+a smoother experience.</p>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

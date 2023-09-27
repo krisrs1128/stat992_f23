@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Scales and Gapminder | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Scales and Gapminder</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Visual encoding for real data with the help of D3 scales</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week5/week5-4">Code</a>, <a href="https://mediaspace.wisc.edu/media/Week%205%20-%204%3A%20Scales%20and%20Gapminder/1_wdh5hhlq">Recording</a></p>
+
+<ol>
+  <li>In these notes, we’ll finally apply the general update pattern to visualize a
+real data set, the gapminder data we saw before. We’ll create the interactive
+visualization below. Notice that when we change the selected continents, points
+are entering / exiting from the display. Moreover, when we change the year, the
+x-y coordinates of each point are updated.</li>
+</ol>
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-4/gapminder-update2.html" width="600" height="500"></iframe>
+
+<ol>
+  <li>
+    <p>Before we do anything interactive, let’s define a static version for a single
+timepoint and subset of countries. This will make use of the concept of scales.
+Once we have a static version, we’ll consider how the general update pattern can
+be used to enable interactivity.</p>
+  </li>
+  <li>Scales are a device for creating visual encodings. They are functions that map from data values to properties of visual marks. They are generally defined using code like,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.{type of scale}
+  .domain({data values})
+  .range({visual mark values})
+</code></pre></div>    </div>
+    <p>For example, we can map cities to colors using an ordinal scale,</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let name_scale = d3.scaleOrdinal()
+ .domain(["madison", "milwaukee", "chicago"])
+ .range(["red", "green", "blue"])
+</code></pre></div>    </div>
+    <p>and once the scale is defined, it can be applied like a function,</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &gt; name_scale("madison")
+ &gt; 'red'
+</code></pre></div>    </div>
+  </li>
+  <li>For our visualization, we will define three scales,
+    <ul>
+      <li>A linear scale mapping life expectancy to the y-axis (pixels coordinates between 0 and 500, the height of the SVG).</li>
+      <li>An analogous linear scale for the log-population variable.</li>
+      <li>A color scale mapping continents to colors.</li>
+    </ul>
+  </li>
+  <li>The hardest part of making these scales is identifying the domain of the
+data. For the two linear scales, a useful helper is <code class="language-plaintext highlighter-rouge">d3.extent()</code>, which returns
+the minimum and maximum values of an array. Specifically, we can extract the
+unique <code class="language-plaintext highlighter-rouge">life_expectancy</code> values using
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  data.map(d =&gt; d.life_expectancy)
+</code></pre></div>    </div>
+    <p>and from there, we can get the minimum and maximum values of this array using</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> d3.extent(data.map(d =&gt; d.life_expectancy))
+</code></pre></div>    </div>
+    <p>This allows us to build the required y-axis scale,</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> d3.scaleLinear()
+   .domain(d3.extent(data.map(d =&gt; d.life_expectancy)))
+   .range([500, 0])
+</code></pre></div>    </div>
+  </li>
+  <li>For the color scale’s domain, we need to get the unique values of all the continents. This can be done using the <code class="language-plaintext highlighter-rouge">Set</code> function in javascript. In particular, <code class="language-plaintext highlighter-rouge">[... new Set(x)]</code> will define a new array with only the unique values appearing in the array <code class="language-plaintext highlighter-rouge">x</code>. So, for the unique continents, we can use,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[... new Set(data.map(d =&gt; d.continent))]
+</code></pre></div>    </div>
+    <p>This allows us to construct a color scale for our circles,</p>
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.scaleOrdinal()
+  .domain([... new Set(data.map(d =&gt; d.continent))])
+  .range(d3.schemeSet2)
+</code></pre></div>    </div>
+    <p>where we used the Set2 color scheme provided by the <a href="https://github.com/d3/d3-color"><code class="language-plaintext highlighter-rouge">d3-color</code> library</a>.</p>
+  </li>
+  <li>I like to wrap all the scales into a single javascript object, created as a function of the input data,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function make_scales(data) {
+ return {
+   y: d3.scaleLinear()
+        .domain(d3.extent(data.map(d =&gt; d.life_expectancy)))
+        .range([500, 0]),
+   x: d3.scaleLinear()
+        .domain(d3.extent(data.map(d =&gt; d.lpop)))
+        .range([0, 700]),
+   fill: d3.scaleOrdinal()
+           .domain([... new Set(data.map(d =&gt; d.continent))])
+           .range(d3.schemeSet2)
+  }
+}
+</code></pre></div>    </div>
+    <p>but you could just as well define separate variables containing each scale.</p>
+  </li>
+  <li>Once the scales are defined, they help define visual encodings through
+<code class="language-plaintext highlighter-rouge">.attrs</code>. For example, we can modify our code from the previous lecture to set
+attributes of the appended circle elements,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> function visualize(data) {
+   scales = make_scales(data)
+   data = data.filter(d =&gt; d.year == 1965)
+
+   d3.select("svg")
+     .selectAll("circle")
+     .data(data).enter()
+     .append("circle")
+     .attrs({
+       cx: d =&gt; scales.x(d.lpop),
+       cy: d =&gt; scales.y(d.life_expectancy),
+       fill: d =&gt; scales.fill(d.continent)
+      })
+ }
+</code></pre></div>    </div>
+    <p>and now the elements take up the full space available. (Notice that I’ve created a <code class="language-plaintext highlighter-rouge">.css</code> file to store fixed attributes of the circle, which keeps me from having to include the radius in this call to <code class="language-plaintext highlighter-rouge">.attrs</code>.)</p>
+  </li>
+  <li>If we only wanted to make a static visualization, we would at this point spend time creating appropriate annotation — at the very least we should include coordinate axes, their titles, and a color legend. However, since the focus of the last few notes have been the general update pattern, let’s consider instead how to apply this pattern to enable the interactivity shown in the initial example.</li>
+  <li>Based on the user’s selected continents, we will want to enter / exit the
+circles that are shown on the screen. These changes will need to be run each
+time an option is clicked. On the other hand, when the slider is moved, there is
+no need to enter / exit circles, but we will need to update their positions
+according to the population / life expectancy in the chosen year.</li>
+  <li>Let’s consider the problem of enter / exiting circles according to the
+selected country. For now, don’t worry about how this user input is created (we
+will go over this next week). Just know that, every time the input is changed,
+an array called <code class="language-plaintext highlighter-rouge">continents</code> will be updated to include just those continents
+that the user has currently selected (for reference it was initialized with,
+<code class="language-plaintext highlighter-rouge">continents = ["Americas", "Europe", "Africa", "Americas", "Asia", "Oceania"]</code>).</li>
+  <li>To enter and exit continents based on the user’s choices, we first filter
+the full data down to those countries whose continent is contained the current
+array of continents,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let subset = data.filter(d =&gt; continents.indexOf(d.continent) != -1);
+</code></pre></div>    </div>
+    <p>(if an element is not contained in an array, calling <code class="language-plaintext highlighter-rouge">indexOf</code> on it will return -1).</p>
+  </li>
+  <li>We bind this subset to the existing selection of circles, making sure to key
+by the country name, so that the enter-exit logic isn’t governed by array index
+alone.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let selection = d3.select("svg").selectAll("circle")
+  .data(subset, d =&gt; d.country)
+</code></pre></div>    </div>
+  </li>
+  <li>Given the new selection, we can append any countries that were not
+previously included. We can also exit those that are no longer needed.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let selection = d3.select("svg").selectAll("circle")
+  .data(subset, d =&gt; d.country)
+selection.enter()
+  .append("circle")
+  .attrs({
+    cx: d =&gt; scales.x(d.lpop),
+    cy: d =&gt; scales.y(d.life_expectancy),
+    fill: d =&gt; scales.fill(d.continent),
+  })
+selection.exit().remove()
+</code></pre></div>    </div>
+    <p>You can review the full implementation <a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week5/week5-4/gapminder-update.js">here</a>.</p>
+  </li>
+  <li>What about updating country positions through the slider? For this, we have
+to retrieve the user’s selected year, using the <code class="language-plaintext highlighter-rouge">year</code> variable. We can build an
+array of just the current country-year combinations by filtering,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>let subset = data.filter(d =&gt; continents.indexOf(d.continent) != -1 &amp; d.year == year);
+</code></pre></div>    </div>
+  </li>
+  <li>Once we bind this version of the data (again keying by country name), we can
+change its location using the updated <code class="language-plaintext highlighter-rouge">lpop</code> and <code class="language-plaintext highlighter-rouge">life_expectancy</code> values,
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d3.select("svg").selectAll("circle")
+  .data(subset, d =&gt; d.country)
+  .transition()
+  .duration(1000)
+  .attrs({
+    cx: d =&gt; scales.x(d.lpop),
+    cy: d =&gt; scales.y(d.life_expectancy)
+  })
+</code></pre></div>    </div>
+  </li>
+  <li>Combining with the logic for entering / exiting continents above, we now
+have the complete general update pattern implementation for this visualization.
+You can review the full code
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/examples/week5/week5-4/gapminder-update2.js">here</a>.
+It might seem like a lot of code, but we’ve built it up over many small steps.
+Moreover, 70 lines of code is a small price to pay for a type of smooth
+interactivity that we could never achieve with Shiny alone.</li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

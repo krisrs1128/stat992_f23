@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Temporal Interaction | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Temporal Interaction</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Interactivity in time series visualization</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week8/week8-2">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%208%20-%202%3A%20Temporal%20Interaction/1_5b02ox5g">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Temporal data often have high information density, making
+interactivity worthwhile. In these notes, we’ll review some of the
+general principles of temporal interactivity discussed in the
+reading before illustrating with a few examples.</p>
+  </li>
+  <li>
+    <p>It is often useful to think about interactive visualization in terms
+of Norman’s “gulfs.” The gulf of interaction refers to the mental
+effort required to go from a visual query (in our heads) to a
+physical interaction (on the screen). The gulf of evaluation refers
+to the reader’s attempt to understand what has happened when the
+interface changes. Users need to be able to traverse both gulfs
+easily. If there is too much difficulty in either defining the query
+or making sense of the result, the interaction will be ineffective.</p>
+
+    <p><img src="https://github.com/krisrs1128/stat679_code/raw/main/examples/week8/week8-2/normans_gulfs.png" width="700" /></p>
+  </li>
+  <li>
+    <p>One of the most useful types of interactivity in time series
+visualization is the overview + detail technique. In this approach,
+the reader is first presented with an overview of the full time
+series. They can then interactively query for details depending on
+their interest. The overview + detail technique is often referred to
+as Shneiderman’s mantra: “Overview first, then details on demand.”</p>
+  </li>
+  <li>
+    <p>Tooltips can be viewed as implementing the overview + detail
+principle. Let’s see how we can implement a tooltip for the
+electricity time series example from the previous notes. We will use
+a Voronoi mouseover, so that it’s not necessary to hover exactly
+over each path (which can be quite narrow). We define the Voronoi
+neighborhoods using <code class="language-plaintext highlighter-rouge">d3.Delaunay</code> together with the <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code>
+scales, just like in our <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-3.html">earlier scatterplot
+notes</a>.
+One subtlety here is that we had to reshape the data structure
+containing all the timepoints, because <code class="language-plaintext highlighter-rouge">d3.Delaunay</code> only knows how
+to work with ordinary arrays (not arrays of arrays, like how our
+original temporal data are stored).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function add_voronoi(flat_data, scales) {
+  let delaunay = d3.Delaunay.from(flat_data, d =&gt; scales.x(d.time_of_day), d =&gt; scales.y(d.Demand));
+  d3.select("svg").on("mousemove", (ev) =&gt; update_series(ev, flat_data, delaunay, scales))
+}
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>In <code class="language-plaintext highlighter-rouge">update_series()</code>, we use <code class="language-plaintext highlighter-rouge">delaunay.find()</code> to look up the date
+of the closest time series so that it can be highlighted. The first
+block updates the <code class="language-plaintext highlighter-rouge">stroke</code> color and width. The second block
+replaces the previous tooltip text and positions it at the closest
+measurement location. Note that the index refers to the flattened
+array, not the original array of arrays.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function update_series(ev, flat_data, delaunay, scales) {
+  let ix = delaunay.find(ev.pageX, ev.pageY);
+  d3.select("#series")
+    .selectAll("path")
+    .attrs({
+      stroke: e =&gt; e[0].Date_string == flat_data[ix].Date_string ? "red" : "#a8a8a8",
+      "stroke-width": e =&gt; e[0].Date_string == flat_data[ix].Date_string ? "4px" : "1px"
+    })
+
+  d3.select(ev.target).raise()
+  d3.select("#tooltip text")
+    .attr("transform", `translate(${scales.x(flat_data[ix].time_of_day) + 5}, ${scales.y(data[ix].Demand) - 5})`)
+    .text(data[ix].Date_string)
+}
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week8/week8-1/electricity-2.html" height="400" width="700"></iframe>
+  </li>
+  <li>
+    <p>Here is another example of the overview + detail principle. Below,
+we’ve built an collapsable version of the previous notes’ Gantt
+chart. The idea is to reduce multiple events into a larger group.
+For example, we could use this to collapse many short subtasks (the
+detail) in a project into one larger, longer-term task (the
+overview). We’ll implement a simple version of this that collapses
+all events in the chart. The main idea is to define a variable,
+called <code class="language-plaintext highlighter-rouge">collapsed</code> below, that stores whether or not the chart is
+currently collapsed. Whenever a button is clicked, we trigger an
+event that reverses the value of that variable. We then either
+expand or overlap the events.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function toggle_collapse(scales) {
+  if (collapsed) {
+    collapsed = false;
+    uncollapse(scales);
+  } else {
+    collapsed = true;
+    collapse();
+  }
+}
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>To implement the collapse, we have to select all the rectangles and
+then change their <code class="language-plaintext highlighter-rouge">y</code> coordinate attribute. We similarly move the
+group element containing the <code class="language-plaintext highlighter-rouge">x</code>-axis to the top of the plot and
+clear the tooltip. The <code class="language-plaintext highlighter-rouge">uncollapse()</code> function simply reverses this
+operation.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function collapse() {
+  d3.select("#rects")
+    .selectAll("rect")
+    .transition()
+    .duration(1000)
+    .attr("y", 0)
+
+  d3.select("#x_axis")
+    .transition()
+    .duration(1000)
+    .attr("transform", "translate(0, 8)")
+
+  d3.select("#tooltip").select("text").text("")
+}
+</code></pre></div>    </div>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week8/week8-1/gantt2.html" height="400" width="500" style="text-align: center"></iframe>
+  </li>
+  <li>
+    <p>Another form of overview + detail can be implement by linked
+brushing. We can brush to focus in on specific time windows of
+interest, while never losing the context of the overall time series
+shape. This is implemented in the following example (due to Mike
+Bostock). The main idea is to update the domain of the upper (focus)
+time series’ x-axis scale based on the currently brushed time window
+from the lower (context) series. This is the one-dimensional analog
+of the approach used in the scatterplot zooming example in our
+<a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-4.html">earlier
+notes</a>.</p>
+
+    <iframe width="100%" height="633" frameborder="0" src="https://observablehq.com/embed/@d3/focus-context?cells=chart%2Cviewof+focus"></iframe>
+  </li>
+  <li>
+    <p>It is also common to use linked brushing to define queries based on
+attributes of the time series. This was used in our earlier bike
+sharing example, where we linked daily bike demand with the day’s
+weather.</p>
+
+    <iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-4/bike.html" width="700" height="320"></iframe>
+  </li>
+  <li>
+    <p>Finally, we can query series based on summaries of each series. For
+example, we could have queried the time series based on their
+overall trend. The histogram below gives the slopes across series in
+the Opioid Atlas dataset. Hovering over points on the left hand
+histogram highlights countries with the largest changes over time.</p>
+
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/LGf1FyTytTw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+    <p>Indeed, slope is just one statistic that can be used to navigate a
+collection of time series. There is a small literature on summary
+statistics for time series.
+<a href="https://feasts.tidyverts.org/"><code class="language-plaintext highlighter-rouge">feasts</code></a> is a useful R package for
+extracting these kinds of statistics.</p>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

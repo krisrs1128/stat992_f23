@@ -1,0 +1,179 @@
+---
+title: Scales and Gapminder
+layout: post
+output:
+  md_document:
+    preserve_yaml: true
+---
+
+_Visual encoding for real data with the help of D3 scales_
+
+[Code](https://github.com/krisrs1128/stat679_code/tree/main/examples/week5/week5-4), [Recording](https://mediaspace.wisc.edu/media/Week%205%20-%204%3A%20Scales%20and%20Gapminder/1_wdh5hhlq)
+
+1. In these notes, we’ll finally apply the general update pattern to visualize a
+real data set, the gapminder data we saw before. We'll create the interactive
+visualization below. Notice that when we change the selected continents, points
+are entering / exiting from the display. Moreover, when we change the year, the
+x-y coordinates of each point are updated.
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week5/week5-4/gapminder-update2.html" width=600 height=500></iframe>
+
+
+2. Before we do anything interactive, let's define a static version for a single
+timepoint and subset of countries. This will make use of the concept of scales.
+Once we have a static version, we’ll consider how the general update pattern can
+be used to enable interactivity.
+
+3. Scales are a device for creating visual encodings. They are functions that map from data values to properties of visual marks. They are generally defined using code like,
+  ```
+d3.{type of scale}
+  .domain({data values})
+  .range({visual mark values})
+  ```
+	For example, we can map cities to colors using an ordinal scale,
+  ```
+let name_scale = d3.scaleOrdinal()
+    .domain(["madison", "milwaukee", "chicago"])
+    .range(["red", "green", "blue"])
+  ```
+	and once the scale is defined, it can be applied like a function,
+  ```
+	> name_scale("madison")
+	> 'red'
+  ```
+4. For our visualization, we will define three scales,
+	* A linear scale mapping life expectancy to the y-axis (pixels coordinates between 0 and 500, the height of the SVG).
+	* An analogous linear scale for the log-population variable.
+	* A color scale mapping continents to colors.
+5. The hardest part of making these scales is identifying the domain of the
+data. For the two linear scales, a useful helper is `d3.extent()`, which returns
+the minimum and maximum values of an array. Specifically, we can extract the
+unique `life_expectancy` values using
+  ```
+  data.map(d => d.life_expectancy)
+  ```
+	and from there, we can get the minimum and maximum values of this array using
+  ```
+	d3.extent(data.map(d => d.life_expectancy))
+  ```
+	This allows us to build the required y-axis scale,
+  ```
+	d3.scaleLinear()
+	  .domain(d3.extent(data.map(d => d.life_expectancy)))
+	  .range([500, 0])
+  ```
+6. For the color scale’s domain, we need to get the unique values of all the continents. This can be done using the `Set` function in javascript. In particular, `[... new Set(x)]` will define a new array with only the unique values appearing in the array `x`. So, for the unique continents, we can use,
+  ```
+[... new Set(data.map(d => d.continent))]
+  ```
+	This allows us to construct a color scale for our circles,
+  ```
+d3.scaleOrdinal()
+  .domain([... new Set(data.map(d => d.continent))])
+  .range(d3.schemeSet2)
+  ```
+	where we used the Set2 color scheme provided by the [`d3-color` library](https://github.com/d3/d3-color).
+
+7. I like to wrap all the scales into a single javascript object, created as a function of the input data,
+  ```
+function make_scales(data) {
+    return {
+      y: d3.scaleLinear()
+           .domain(d3.extent(data.map(d => d.life_expectancy)))
+           .range([500, 0]),
+      x: d3.scaleLinear()
+           .domain(d3.extent(data.map(d => d.lpop)))
+           .range([0, 700]),
+      fill: d3.scaleOrdinal()
+              .domain([... new Set(data.map(d => d.continent))])
+              .range(d3.schemeSet2)
+     }
+}
+  ```
+	but you could just as well define separate variables containing each scale.
+8. Once the scales are defined, they help define visual encodings through
+`.attrs`. For example, we can modify our code from the previous lecture to set
+attributes of the appended circle elements,
+  ```
+	function visualize(data) {
+	  scales = make_scales(data)
+	  data = data.filter(d => d.year == 1965)
+
+	  d3.select("svg")
+		.selectAll("circle")
+		.data(data).enter()
+		.append("circle")
+		.attrs({
+		  cx: d => scales.x(d.lpop),
+		  cy: d => scales.y(d.life_expectancy),
+		  fill: d => scales.fill(d.continent)
+		 })
+	}
+  ```
+	and now the elements take up the full space available. (Notice that I’ve created a `.css` file to store fixed attributes of the circle, which keeps me from having to include the radius in this call to `.attrs`.)
+9. If we only wanted to make a static visualization, we would at this point spend time creating appropriate annotation — at the very least we should include coordinate axes, their titles, and a color legend. However, since the focus of the last few notes have been the general update pattern, let’s consider instead how to apply this pattern to enable the interactivity shown in the initial example.
+10. Based on the user’s selected continents, we will want to enter / exit the
+circles that are shown on the screen. These changes will need to be run each
+time an option is clicked. On the other hand, when the slider is moved, there is
+no need to enter / exit circles, but we will need to update their positions
+according to the population / life expectancy in the chosen year.
+11. Let’s consider the problem of enter / exiting circles according to the
+selected country. For now, don’t worry about how this user input is created (we
+will go over this next week). Just know that, every time the input is changed,
+an array called `continents` will be updated to include just those continents
+that the user has currently selected (for reference it was initialized with,
+`continents = ["Americas", "Europe", "Africa", "Americas", "Asia", "Oceania"]`).
+12. To enter and exit continents based on the user’s choices, we first filter
+the full data down to those countries whose continent is contained the current
+array of continents,
+  ```
+	let subset = data.filter(d => continents.indexOf(d.continent) != -1);
+  ```
+	(if an element is not contained in an array, calling `indexOf` on it will return -1).
+13. We bind this subset to the existing selection of circles, making sure to key
+by the country name, so that the enter-exit logic isn’t governed by array index
+alone.
+  ```
+	let selection = d3.select("svg").selectAll("circle")
+	  .data(subset, d => d.country)
+  ```
+14. Given the new selection, we can append any countries that were not
+previously included. We can also exit those that are no longer needed.
+  ```
+	let selection = d3.select("svg").selectAll("circle")
+	  .data(subset, d => d.country)
+	selection.enter()
+	  .append("circle")
+	  .attrs({
+	    cx: d => scales.x(d.lpop),
+	    cy: d => scales.y(d.life_expectancy),
+	    fill: d => scales.fill(d.continent),
+	  })
+	selection.exit().remove()
+  ```
+	You can review the full implementation [here](https://github.com/krisrs1128/stat679_code/blob/main/examples/week5/week5-4/gapminder-update.js).
+15. What about updating country positions through the slider? For this, we have
+to retrieve the user’s selected year, using the `year` variable. We can build an
+array of just the current country-year combinations by filtering,
+  ```
+	let subset = data.filter(d => continents.indexOf(d.continent) != -1 & d.year == year);
+  ```
+16. Once we bind this version of the data (again keying by country name), we can
+change its location using the updated `lpop` and `life_expectancy` values,
+  ```
+	d3.select("svg").selectAll("circle")
+	  .data(subset, d => d.country)
+	  .transition()
+	  .duration(1000)
+	  .attrs({
+	    cx: d => scales.x(d.lpop),
+	    cy: d => scales.y(d.life_expectancy)
+	  })
+  ```
+17. Combining with the logic for entering / exiting continents above, we now
+have the complete general update pattern implementation for this visualization.
+You can review the full code
+[here](https://github.com/krisrs1128/stat679_code/blob/main/examples/week5/week5-4/gapminder-update2.js).
+It might seem like a lot of code, but we’ve built it up over many small steps.
+Moreover, 70 lines of code is a small price to pay for a type of smooth
+interactivity that we could never achieve with Shiny alone.

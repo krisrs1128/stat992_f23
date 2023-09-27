@@ -1,0 +1,104 @@
+---
+title: "Demos"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+theme_set(theme_minimal())
+```
+
+### Exercise Review [Student Exercise Analysis]
+
+The data
+[here](https://raw.githubusercontent.com/krisrs1128/stat679_code/main/examples/week1/formulating_questions.csv)
+give an (anonymized) summary of responses to the [Formulating Questions]
+exercise, given by students in Stat 679 / 992 in Fall 2022. It describes the
+dataset topic, its source, the submitted visualization type, and the software
+used to create it.
+
+a. What types of topics seem to interest students in this class?
+
+```{r}
+responses <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat679_code/main/examples/week1/formulating_questions.csv")
+head(responses)
+
+counts <- responses %>%
+  count(category)
+
+ggplot(counts) +
+  geom_col(aes(n, reorder(category, n))) +
+  theme(
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  ) +
+  labs(x = "Number of Submissions", y = "Category")
+```
+
+b. What types of visualization techniques and software to students seem most
+familiar with? How should teaching be adapted to reflect this?
+
+```{r}
+responses %>%
+  count(visualization, package) %>%
+  ggplot() +
+  geom_tile(aes(reorder(package, -n), reorder(visualization, -n), fill = n)) +
+  scale_fill_distiller(direction = 1) +
+  theme(panel.grid = element_blank())
+```
+
+c. When were submissions being made? Are the in-class exercises actually being
+solved in class?
+
+```{r}
+library(lubridate)
+responses %>%
+  count(submission_date) %>%
+  mutate(submission_date = as_date(submission_date, format = "%m/%d/%y")) %>%
+  ggplot() +
+  geom_point(aes(submission_date, 0, size = n))
+```
+
+### Code Demo [City Temperatures]
+
+Let's create versions of Figure 2.3 and 2.4 from the
+[reading](https://clauswilke.com/dataviz/aesthetic-mapping.html) this week. The
+command below reads in the data. We've filtered to a slightly different set of
+cities (Barrow is in Alaska, Honolulu is in Hawaii), but we should still be able
+to study changes in temperature over time.
+
+```{r}
+temperature <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/data/temperatures.csv")
+```
+
+a. Make a version of Figure 2.3 using a line mark (`geom_line`). Make at
+least one customization of the theme to make the plot more similar to the
+version in Figure 2.3. _Hint: To group the lines by city, use the `group = ` aesthetic mapping._
+
+```{r}
+ggplot(temperature) +
+  geom_line(aes(date, temperature, col = city, group = city), size = 2) +
+  scale_x_date(date_labels = "%B")
+```
+
+
+b. Using the `group_by` + `summarise` pattern, compute the mean temperature
+for each month in each city.
+
+c. Using the data generated in (b), Make a version of Figure 2.4 using a
+tile mark (`geom_tile`). Try either (i) adding the `scale_fill_viridis_c(option =
+"magma")` scale to match the color scheme from the reading or (ii) adding
+`coord_fixed()` to make sure the marks are squares, not rectangles.
+
+```{r}
+temperature %>%
+  group_by(city, month) %>%
+  summarise(mean_temp = mean(temperature)) %>%
+  ggplot() +
+  geom_tile(aes(month, reorder(city, mean_temp), fill = mean_temp)) +
+  scale_fill_viridis_c(option = "magma")
+```
+
+d. Compare and contrast the two displays. What types of comparisons are
+easier to make / what patterns are most readily visible using Figure 2.3 vs.
+Figure 2.4, and vice versa?

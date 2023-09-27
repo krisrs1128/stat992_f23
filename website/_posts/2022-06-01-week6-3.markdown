@@ -1,0 +1,104 @@
+---
+title: Click and Hover Interaction in D3 (Part 2)
+layout: post
+output:
+  md_document:
+    preserve_yaml: true
+---
+
+_Voronoi mouse over and graphical queries_
+
+[Code](https://github.com/krisrs1128/stat679_code/tree/main/examples/week6/week6-3), [Recording](https://mediaspace.wisc.edu/media/Week%206%20-%203%3A%20Click%20and%20Hover%20Interaction%20in%20D3%20(Part%202)/1_onon3q5m)
+
+1. In our previous notes, we saw how to use hover and click events to define
+user interaction in D3 visualizations. In these notes, we’ll consider two
+extensions that can lead to more effective interfaces: Voronoi mouseover effects
+and click-based graphical queries.
+2. Our earlier [hover implementations](https://krisrs1128.github.io/stat679_notes/2022/06/01/week6-2.html) can be frustrating to use, because they
+require that we place our mouse exactly on top of one of the scatterplot
+circles. If the circles were any smaller than they are, interaction would be
+essentially impossible.
+3. A better strategy is to use a Voronoi mouseover. This is just a fancy way of
+saying that we should register a mouseover whenever the mouse moves near to, but
+not exactly on, a potential object of interest. Specifically, we will register a
+mouse event whenever the nearest neighbor of the mouse’s current position
+changes. I'm showing the background neighborhoods with the thin grey lines, but
+in a real-world implementation, these boundaries would be not be drawn.
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-2/imdb-voronoi.html" width=700 height=500></iframe>
+
+4. The main idea is to create a `d3.Delaunay` object which can be used to
+compute the nearest neighboring datapoint of a mouse at coordinate position `(x, y)`. This can be implemented by using D3’s [Delauny triangulation library](https://github.com/d3/d3-delaunay). The first argument of
+`d3.Delanay.from()` defines the dataset from which to build neighborhoods. The
+second and third identify the `x` and `y` pixel positions associated with each
+data point.
+
+  ```
+  let delaunay = d3.Delaunay.from(data, d => scales.x(d.IMDB_Rating), d => scales.y(d.Rotten_Tomatoes_Rating)),
+  ```
+
+5. We next register whenever the mouse moves on the background SVG and
+recalculate the nearest neighbor using the `.find()` method from Delaunay. Using
+the same logic as in our previous hover example, we can then update the location
+of the tooltip to reflect this mouseover events. The resulting interaction is
+much smoother than our previous implementation.
+
+```
+d3.select("svg").on("mousemove", (ev) => mouseover(ev, data, delaunay, scales))
+
+...
+
+function mouseover(ev, data, delaunay, scales) {
+  let ix = delaunay.find(ev.pageX, ev.pageY);
+
+  d3.select("#tooltip")  // first move tooltip to current datapoint's location
+    .attr("transform", `translate(${scales.x(data[ix].IMDB_Rating)}, ${scales.y(data[ix].Rotten_Tomatoes_Rating)})`)
+    .select("text")
+    .text(data[ix].Title); // fill in the current movie's name
+```
+
+6. Next, let’s consider how to improve click events through graphical queries.
+Recall from our Shiny discussion that it can be helpful to define queries using
+separate, adjacent visualizations. This increases the information density of a
+visualization and minimizes the need for additional interface elements.
+7. As a specific example, let’s modify the legend click selection from the
+previous notes so that the legend is actually a barchart showing the frequencies
+of the different movie types. In this way, the legend has been modified to
+encode more information.
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week6/week6-3/imdb-linked.html" width=650 height=400></iframe>
+
+9. To implement this change, we created a new dataset, `stats.csv`, associated
+with the genre totals. We read in both simultaneously using the following syntax,
+  ```
+Promise.all([
+    d3.csv("movies.csv", d3.autoType),
+    d3.csv("stats.csv", d3.autoType),
+]).then(visualize)
+  ```
+  and we have updated our `make_scales` function to include `x` and `y`
+  coordinate scales associated with the bar chart.
+
+10.	Now, when we create rectangles representing the legend elements, we can bind
+the associated genre counts.
+  ```
+d3.select("#bars")
+  .selectAll("rect")
+  .data(stats).enter()
+  .append("rect")
+  ... attributes using scales
+  ```
+  The width of each bar is set using the total associated with each genre,
+  ```
+.attrs({
+  ...
+  width: d => scales.x2(d.n),
+  ...
+})
+  ```
+
+11. At this point, we can use the same update function from our [earlier implementation](https://github.com/krisrs1128/stat679_code/blob/main/examples/week6/week6-3/imdb-legend-click.js) to toggle whether a movie should be highlighted or not.
+
+  ```
+  [selection defining the legend bars]
+  .on("click", (ev, d) => toggle_selection(ev, d.Genre))
+  ```

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Elements of a Shiny App | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Elements of a Shiny App</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Vocabulary used by R Shiny Library, and a few example apps.</em></p>
+
+<p><a href="https://mediaspace.wisc.edu/media/Week+2+-+1A+Elements+of+a+Shiny+App/1_rlzn96xp">Recording</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week2-1.Rmd">Code</a></p>
+
+<ol>
+  <li>
+    <p>All Shiny apps are made up from the same few building blocks. These
+notes review the main types of blocks. When reading code from more
+complex apps, it can be helpful to try to classify pieces of the
+code into these types of blocks.</p>
+  </li>
+  <li>
+    <p>The highest level breakdown of Shiny app code is between <code class="language-plaintext highlighter-rouge">ui</code> and
+<code class="language-plaintext highlighter-rouge">server</code> components. The <code class="language-plaintext highlighter-rouge">ui</code> controls what the app <em>looks like</em>. It
+stands for “User Interface.” The <code class="language-plaintext highlighter-rouge">server</code> controls what the app
+<em>does</em>. For example, the app below defines a title and textbox where
+users can type. But it does not do anything, since the server is
+empty.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+
+ui &lt;- fluidPage(
+  titlePanel("Hello!"),
+  textInput("name", "Enter your name")  # first arg is ID, second is label
+)
+
+server &lt;- function(input, output) {}
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/43a4312c-a124-4b63-8228-23ba5375992b/" allowfullscreen="" data-external="1"></iframe>
+  </li>
+  <li>
+    <p>The UI elements can be further broken down into Inputs, Outputs, and
+Descriptors[1], all grouped together by an organizing layout
+function. Inputs are UI elements that users can manipulate to prompt
+certain types of computation. Outputs are parts of the interface
+that reflects the result of a <code class="language-plaintext highlighter-rouge">server</code> computation. Descriptors are
+parts of the page that aren’t involved in computation, but which
+provide narrative structure and guide the user.</p>
+
+    <p>For example, in the toy app above, <code class="language-plaintext highlighter-rouge">titlePage</code> is a descriptor
+providing some title text. <code class="language-plaintext highlighter-rouge">textInput</code> is an input element allowing
+users to enter text. <code class="language-plaintext highlighter-rouge">fluidPage</code> is a layout function that arranges
+these elements on a continuous page (some other layout functions are
+<code class="language-plaintext highlighter-rouge">sidebarLayout</code>, <code class="language-plaintext highlighter-rouge">navbarPage</code>, <code class="language-plaintext highlighter-rouge">flowLayout</code>, …)</p>
+  </li>
+  <li>
+    <p>An important point is that all input and output elements must be
+given a unique ID. This is always the first argument of a <code class="language-plaintext highlighter-rouge">*Input</code>
+or <code class="language-plaintext highlighter-rouge">*Output</code> function defined in Shiny. The ID tags are how
+different parts of the application are able to refer to one another.
+For example, if we wanted to refer to the text the user entered in
+the application above, we could refer to the <code class="language-plaintext highlighter-rouge">name</code> ID.</p>
+  </li>
+  <li>
+    <p>Let’s see how to (1) make user inputs cause some sort of computation
+and (2) have the result of that computation appear to the user. For
+(1), we will add a <code class="language-plaintext highlighter-rouge">renderText</code> element to the <code class="language-plaintext highlighter-rouge">server</code>. All
+<code class="language-plaintext highlighter-rouge">render*</code> functions do two things,</p>
+
+    <ul>
+      <li>They make inputs from the <code class="language-plaintext highlighter-rouge">ui</code> available for computation.</li>
+      <li>They generate HTML code that allows the results of the
+computation to appear in a UI output.</li>
+    </ul>
+
+    <p>For (2), we will add a <code class="language-plaintext highlighter-rouge">textOutput</code> element to the <code class="language-plaintext highlighter-rouge">ui</code> layout
+defined above. Let’s look at the code,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+
+ui &lt;- fluidPage(
+  titlePanel("Hello!"),
+  textInput("name", "Enter your name"),
+  textOutput("printed_name")
+)
+
+server &lt;- function(input, output) {
+  output$printed_name &lt;- renderText({
+    paste0("Welcome to shiny, ", input$name, "!")
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/541af110-2ce1-46d1-b293-f38a96e125f3/" allowfullscreen="" data-external="1"></iframe>
+  </li>
+  <li>
+    <p>There are a few points worth noting. First, the <code class="language-plaintext highlighter-rouge">renderText</code>
+component was able to refer to the value entered in the textbox
+using <code class="language-plaintext highlighter-rouge">input$name</code>. This was possible because <code class="language-plaintext highlighter-rouge">name</code> was the ID that
+we gave to the <code class="language-plaintext highlighter-rouge">textInput</code> component. It would not have worked if we
+had used <code class="language-plaintext highlighter-rouge">input$text</code> outside of a <code class="language-plaintext highlighter-rouge">render*</code> function: this is what
+we mean by the <code class="language-plaintext highlighter-rouge">render*</code> functions making the UI inputs available
+for computation. Finally, we were able to refer to the rendered
+output in the UI by adding a <code class="language-plaintext highlighter-rouge">textOutput</code> component. By giving this
+component the id <code class="language-plaintext highlighter-rouge">printed_name</code>, we were able to tell it to look
+into the server for a rendered output named <code class="language-plaintext highlighter-rouge">printed_name</code> and fill
+it in.</p>
+  </li>
+  <li>
+    <p>An even deeper idea is that the code did not simply run linearly,
+from top of the script to the bottom. If that were all the code did,
+then it would have run once at the beginning, and it would never
+have updated when you entered your name. Instead, it ran <em>every time
+you typed into the textbox</em>. This is the “reactive programming”
+paradigm, and it is what makes interactive visualization possible.
+<code class="language-plaintext highlighter-rouge">renderText</code> knows to rerun every time something is entered into the
+<code class="language-plaintext highlighter-rouge">name</code> text input, because we told it to depend on <code class="language-plaintext highlighter-rouge">input$name</code>. We
+will explore the idea of reactivity in more depth in the next
+lecture, but for now, just remember that the order in which code is
+executed is not simply determined by the order of lines in a file.</p>
+  </li>
+  <li>
+    <p>Let’s look at a few more examples, just to get a feel for things.
+The app below updates a plot of random normal variables given a mean
+specified by the user. We’ve introduced a new type of input, a
+<code class="language-plaintext highlighter-rouge">numericInput</code>, which captures numbers. We’ve also added a new
+output, <code class="language-plaintext highlighter-rouge">plotOutput</code>, allowing with its accompanying renderer,
+<code class="language-plaintext highlighter-rouge">renderPlot</code> (remember, UI outputs are always paired with server
+renderers).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+
+ui &lt;- fluidPage(
+  titlePanel("Random Normals"),
+  numericInput("mean", "Enter the mean", 0), # 0 is the default
+  plotOutput("histogram")
+)
+
+server &lt;- function(input, output) {
+  output$histogram &lt;- renderPlot({
+    data.frame(values = rnorm(100, input$mean)) %&gt;%
+      ggplot() +
+        geom_histogram(aes(values))
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/2cc8cc90-7c51-493c-81e1-a6b8919cd6a6/" allowfullscreen="" data-external="1" height="535" width="600"></iframe>
+  </li>
+  <li>
+    <p>We can make the plot depend on several inputs. The code below allows
+the user to change the total number of data points and the variance,
+this time using slider inputs. I recommend taking a look at
+different inputs on the shiny
+<a href="https://shiny.rstudio.com/images/shiny-cheatsheet.pdf">cheatsheet</a>,
+though be aware that there are many
+<a href="https://github.com/nanxstats/awesome-shiny-extensions">extensions</a>
+built by the community.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+
+ui &lt;- fluidPage(
+  titlePanel("Random Normals"),
+  numericInput("mean", "Enter the mean", 0),
+  sliderInput("n", "Enter the number of samples", 500, min=1, max=2000),
+  sliderInput("sigma", "Enter the standard deviation", 1, min=.1, max=5),
+  plotOutput("histogram")
+)
+
+server &lt;- function(input, output) {
+  output$histogram &lt;- renderPlot({
+    data.frame(values = rnorm(input$n, input$mean, input$sigma)) %&gt;%
+      ggplot() +
+        geom_histogram(aes(values), bins = 100) +
+        xlim(-10, 10)
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/3d0d8a20-446a-438a-b373-bd06206f178f/" allowfullscreen="" data-external="1" height="735" width="600"></iframe>
+  </li>
+  <li>
+    <p>We can also make the app return several outputs, not just a plot.
+The code below attempts to print the data along in addition to the
+histogram, but it makes a crucial mistake (can you spot it?).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+
+ui &lt;- fluidPage(
+  titlePanel("Random Normals"),
+  numericInput("mean", "Enter the mean", 0),
+  sliderInput("n", "Enter the number of samples", 500, min=1, max=2000),
+  sliderInput("sigma", "Enter the standard deviation", 1, min=.1, max=5),
+  plotOutput("histogram"),
+  dataTableOutput("dt")
+)
+
+server &lt;- function(input, output) {
+  output$histogram &lt;- renderPlot({
+    data.frame(values = rnorm(input$n, input$mean, input$sigma)) %&gt;%
+      ggplot() +
+        geom_histogram(aes(values), bins = 100) +
+        xlim(-10, 10)
+  })
+
+  output$dt &lt;- renderDataTable({
+    data.frame(values = rnorm(input$n, input$mean, input$sigma))
+  })
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/15f7837a-64b6-4f73-9b4a-13f2ca168daa/" allowfullscreen="" data-external="1" height="935" width="600"></iframe>
+  </li>
+  <li>
+    <p>The issue is that this code reruns <code class="language-plaintext highlighter-rouge">rnorm</code> for each output. So, even
+though the interfaces suggests that the printed samples are the same
+as the ones in the histogram, they are actually different. To
+resolve this, we need a way of storing an intermediate computation
+which (1) depends on the inputs but (2) feeds into several outputs.
+Whenever we encounter this need, we can use a reactive expression.
+It is a type of server element that depends on the input and can be
+referred to directly by outputs, which call the reactive expression
+like a function. For example, the code below generates the random
+normal samples a single time, using the <code class="language-plaintext highlighter-rouge">samples()</code> reactive
+expression.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+
+ui &lt;- fluidPage(
+  titlePanel("Random Normals"),
+  numericInput("mean", "Enter the mean", 0),
+  sliderInput("n", "Enter the number of samples", 500, min=1, max=2000),
+  sliderInput("sigma", "Enter the standard deviation", 1, min=.1, max=5),
+  plotOutput("histogram"),
+  dataTableOutput("dt")
+)
+
+server &lt;- function(input, output) {
+  samples &lt;- reactive({
+    data.frame(values = rnorm(input$n, input$mean, input$sigma))
+  })
+
+  output$histogram &lt;- renderPlot({
+      ggplot(samples()) +
+        geom_histogram(aes(values), bins = 100) +
+        xlim(-10, 10)
+  })
+
+  output$dt &lt;- renderDataTable(samples())
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/3e53bb63-a19a-4ded-8ab6-5ffbc9447c8f/" allowfullscreen="" data-external="1" height="935" width="600"></iframe>
+  </li>
+  <li>
+    <p>Finally, a good practice is to move as much non-app related code to
+separate functions. This makes the flow of the app more transparent.
+The clearer the delineation between “computation required for
+individual app components” and “relationship across components,” the
+easier the code will be to understand and extend.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(shiny)
+library(tidyverse)
+
+### Functions within app components
+generate_data &lt;- function(n, mean, sigma) {
+  data.frame(values = rnorm(n, mean, sigma))
+}
+
+histogram_fun &lt;- function(df) {
+  ggplot(df) +
+    geom_histogram(aes(values), bins = 100) +
+    xlim(-10, 10)
+}
+
+### Defines the app
+ui &lt;- fluidPage(
+  titlePanel("Random Normals"),
+  numericInput("mean", "Enter the mean", 0),
+  sliderInput("n", "Enter the number of samples", 500, min=1, max=2000),
+  sliderInput("sigma", "Enter the standard deviation", 1, min=.1, max=5),
+  plotOutput("histogram"),
+  dataTableOutput("dt")
+)
+
+server &lt;- function(input, output) {
+  samples &lt;- reactive({
+    generate_data(input$n, input$mean, input$sigma)
+  })
+  output$histogram &lt;- renderPlot(histogram_fun(samples()))
+  output$dt &lt;- renderDataTable(samples())
+}
+
+app &lt;- shinyApp(ui, server)
+</code></pre></div>    </div>
+
+    <iframe src="https://data-viz.it.wisc.edu/content/fe220e82-becf-4cc6-891c-7fa1c69ba850/" allowfullscreen="" data-external="1" height="935" width="600"></iframe>
+  </li>
+</ol>
+
+<p>[1] I like to use these names to keep everything organized, but they are
+not standard in the community.</p>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Interface Design and Topic Models | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Interface Design and Topic Models</h1>
+      <div class="post__meta">
+        <time>2022-06-02 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>The Stanford Dissertation Browser case study</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week12-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2012%20-%203%3A%20Interface%20Design%20and%20Topic%20Models/1_jocz55hl">Recording</a></p>
+
+<ol>
+  <li>
+    <p>For most of the course, we have focused on visualizing the data
+directly. For the last few weeks, though, we have visualized the
+results of an initial modeling step, like fitting PCA or topic
+models. These kinds of models can help in creating abstractions, and
+reasoning effectively through abstraction is often a source of
+discovery.</p>
+  </li>
+  <li>
+    <p>The ideal is to apply modeling to lift concrete datasets into more
+meaningful abstractions, which can then be visualized to support
+high-level reasoning. Reality, however, is rarely as simple is that.
+In practice, models can go awry, visualizations can be misleading,
+and results can be misunderstood. Indeed, this complexity is one of
+the reasons data science training takes years.</p>
+  </li>
+  <li>
+    <p>The authors of this week’s reading suggest a mnemonic: “interpret
+but verify.” This captures several principles,</p>
+
+    <ul>
+      <li>Interpret: Models and visualizations should be designed in such
+a way that users can draw inferences that are relevant to their
+understanding of a domain.</li>
+      <li>Verify: It is the designer’s responsibility that these
+inferences be accurate.</li>
+    </ul>
+  </li>
+</ol>
+
+<h4 id="stanford-dissertation-browser">Stanford Dissertation Browser</h4>
+
+<ol>
+  <li>
+    <p>The authors ground their discussion by considering a specific design
+project: The Stanford Dissertation Browser. For this project,
+university leadership wanted to discover ways to promote effective,
+interdisciplinary research. Topic models helped transform the the
+raw dissertation text data into higher-levels of abstraction.
+Research themes were reflected in topics, and the interdisciplinary
+reach of certain PhD theses was reflected in their
+mixed-memberships.</p>
+  </li>
+  <li>
+    <p>In several initial implementations of their interface, it was easy
+to draw incorrect inferences. For example, in some
+dimensionality-reduction outputs, it seemed that petroleum
+engineering had become closer to biology over time, but this turned
+out to be an artifact of the reduction and was not visible when
+using the original distances. Another example — some words were used
+in neurobiology (voltage, current, …) led to theses in this
+department to appear very close to electrical engineering, when they
+really had more in common with those in other biology departments.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week12-3/petroleum_case.png" width="400" />
+
+</p>
+  </li>
+  <li>
+    <p>The authors carefully tracked and manually verified inferences made
+by a group of test users. Based on this qualitative evaluation, they
+were able to refine their modeling and visualization approach. For
+example, they used a supervised variant of topics models, and they
+replaced their original dimensionality reduction scatterplot with a
+visualization of topic-derived inter-department similarities.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week12-3/radial_view.png" width="400" />
+
+</p>
+  </li>
+</ol>
+
+<h4 id="overall-strategy">Overall Strategy</h4>
+
+<ol>
+  <li>
+    <p>To implement the “interpret but verify” idea, the authors recommend,</p>
+
+    <ul>
+      <li>Align the analysis, visualization, and models along appropriate
+“units of analysis.”</li>
+      <li>Verify that the modeling results in abstractions / concepts that
+are relevant to the analysis, and modify accordingly.</li>
+      <li>Progressively disclose data to support reasoning at multiple
+levels of abstraction.</li>
+    </ul>
+  </li>
+  <li>
+    <p>The units of analysis in the dissertation browser were departments
+and theses. In general, these are the “entities, relationships, and
+concepts” of interest, and they can often linked to existing
+metadata.</p>
+  </li>
+  <li>
+    <p>Verification can be guided both by quantitative metrics (e.g., test
+error) and qualitative evaluation (e.g., user studies). For revising
+models, it can be possible to refit parameters, add labels, modify
+model structure, or simply override the model with user-provided
+values.</p>
+  </li>
+  <li>
+    <p>Progressive disclosure allows the user to go up and down the <a href="http://worrydream.com/LadderOfAbstraction/">ladder
+of abstraction</a>. It
+makes it possible to navigate large-scale data while supporting
+verification through specific examples.</p>
+  </li>
+  <li>
+    <p>In the dissertation browser, this is implemented through semantic
+zooming (from departmental to dissertation views) and linked
+highlighting (revealing the dissertation abstract on mouseover).</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week12-3/dissertation_browser_overview.png" width="800" />
+
+</p>
+  </li>
+  <li>
+    <p>The question of how to effectively weave together model building
+with visual design is still one that is actively explored in
+research today. If you enjoyed reading about this project, you may
+enjoy other papers on visualization for topic models or machine
+learning [<a href="https://visxai.io/">1</a>, <a href="https://distill.pub/">2</a>,
+<a href="https://www.sciencedirect.com/science/article/pii/S2468502X17300086">3</a>]
+more generally.</p>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

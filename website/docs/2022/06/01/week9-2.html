@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Graph Visualization Tasks | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Graph Visualization Tasks</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>What are typical queries for graph data?</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week9-2.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%209%20-%202%3A%20Graph%20Visualization%20Tasks/1_n5sq9x5d">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Graphs are common across a wide range of fields — for example,
+biochemistry (metabolic networks), sociology (friendship networks),
+digital humanities (letter-writing networks), evolution
+(phylogenetic trees), transportation (logistical routing),
+gastronomy (recipe networks) and cybersecurity (inter-computer
+communication). In each of these fields, it’s common to try to
+visualize the network. But why is visualization ever useful in this
+context? We’ll explore a few answers in these notes, along with some
+criteria that can be used to evaluate the quality of a graph
+visualization.</p>
+
+    <p><img src="/stat679_notes/assets/week9-2/tree_of_life.png" alt="An evolutionary tree, from the Interactive Tree of Life." width="350" /></p>
+    <p class="caption">
+An evolutionary tree, from the Interactive Tree of Life.
+</p>
+
+    <p><img src="/stat679_notes/assets/week9-2/covid-network.png" alt="A COVID-19 transmission network, from 'Clustering and superspreading potential of SARS-CoV-2 infections in Hong Kong.'" width="500" /></p>
+    <p class="caption">
+A COVID-19 transmission network, from ‘Clustering and superspreading
+potential of SARS-CoV-2 infections in Hong Kong.’
+</p>
+  </li>
+  <li>
+    <p>Viewed narrowly, there are two basic types of queries for graph
+data: Topological and attributional. In topological queries, we ask
+questions about how nodes are linked with one another. For example,
+is node A within three steps of node B? On the other hand,
+attributional queries are related to the attributes associated with
+nodes and edges. For example, which nodes (or edges) have an
+attribute value above X?</p>
+  </li>
+  <li>
+    <p>More broadly, we often visualize graphs with the goal of developing
+a more holistic view. There may be salient global or local
+structures of interest — for example, we may discover the existence
+of,</p>
+
+    <ul>
+      <li><em>Clusters</em>: Nodes that are tightly linked with one another, but
+not with nodes outside of the cluster.</li>
+      <li><em>Hubs</em>: Nodes with many more neighbors than others.</li>
+      <li><em>Central nodes</em>: Nodes that lie on the shortest paths between
+many pairs of nodes.</li>
+      <li><em>Connections</em>: Links between nodes or clusters of interest.
+though there are probably far more possibilities than these.</li>
+    </ul>
+  </li>
+  <li>
+    <p>What distinguishes a good from a bad graph visualization? As in all
+data visualization, effectiveness is closely tied to function. The
+representation / interaction should make sure information needed to
+support the intended task is easily accessible, and that superfluous
+information does not occupy too much of the reader’s attention.</p>
+  </li>
+  <li>
+    <p>For example, if a visualization has too many edge crossings, then we
+will have trouble answering any topological queries — crossings can
+make it impossible to follow edges. As an alternative, consider
+either edge bundling or adjacency matrix views. Both highlight the
+key connectivity structure and minimize the overlap that comes with
+more naive visualizations. Both can be made using either ggraph
+[<a href="https://ggraph.data-imaginist.com/reference/geom_conn_bundle.html">1</a>,
+<a href="https://ggraph.data-imaginist.com/reference/geom_edge_tile.html">2</a>]
+or D3 layouts
+[<a href="https://observablehq.com/@d3/hierarchical-edge-bundling">3</a>,
+<a href="https://observablehq.com/@fil/hello-reorder-js">4</a>], which we’ll
+be getting more practice with over the next few lectures.</p>
+
+    <p><img src="/stat679_notes/assets/week9-2/bundle_compare.png" alt="An edge bundled view of a network is much easier to read." width="500" /></p>
+    <p class="caption">
+An edge bundled view of a network is much easier to read.
+</p>
+
+    <p><img src="/stat679_notes/assets/week9-2/adjacency.png" alt="A comparison between node-link and adjacency matrix views of a network, from Munzner's Visualization Analysis and Design." width="500" /></p>
+    <p class="caption">
+A comparison between node-link and adjacency matrix views of a
+network, from Munzner’s Visualization Analysis and Design.
+</p>
+  </li>
+  <li>
+    <p>In interactive graphs, we should aim to minimize the amount of
+change in the positions of the nodes and edges given any user input
+— too much movement creates confusion. The same lesson applies to
+dynamic graphs. It is hard to make sense of an evolving graph if the
+same nodes and edges are unnecessarily jumping around.</p>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

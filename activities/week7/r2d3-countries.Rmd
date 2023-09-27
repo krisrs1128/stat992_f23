@@ -1,0 +1,14 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r}
+library(r2d3)
+```
+
+```{r, out.width=900}
+r2d3(script = "demo6-2.js", dependencies = c("countries.js", "urban_areas.js", "d3-selection-multi.v1.min.js"), css = "./demo6-2.css")
+```
+

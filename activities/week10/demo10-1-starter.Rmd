@@ -1,0 +1,24 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r}
+library(tidyverse)
+library(tidygraph)
+```
+
+This is the movies dataset.
+
+```{r}
+edges <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/movie_links.csv")
+genres <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/genres.csv")
+```
+
+
+This is the energy dataset.
+
+```{r}
+edges <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/energy.csv")
+```

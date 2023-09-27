@@ -1,0 +1,14 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r}
+library(r2d3)
+```
+
+```{r, out.width=900}
+library(palmerpenguins)
+r2d3(penguins, script = "r2d3-data.js", dependencies = c("d3-selection-multi.v1.min.js"))
+```

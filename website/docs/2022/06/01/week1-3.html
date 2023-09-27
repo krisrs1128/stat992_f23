@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>A Vocabulary of Marks | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">A Vocabulary of Marks</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Encodings available in ggplot2.</em></p>
+
+<p><a href="https://mediaspace.wisc.edu/media/Week+1+-+3A+A+Vocabulary+of+Marks/1_ke20cnja">Recording</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week1-3.Rmd">Code</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(scales)
+theme_set(theme_minimal())
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>The choice of encodings influences (1) the types of comparisons that
+a visualization suggests and (2) the accuracy of the conclusions
+that readers leave with. With this in mind, it’s in our best
+interest to build a rich vocabulary of potential visual encodings.
+The more kinds of marks and encodings that are at your fingertips,
+the better your chances are that you’ll arrive at a configuration
+that helps you achieve your purpose.</p>
+  </li>
+  <li>
+    <p><strong>Point marks</strong> can encode data fields using their x and y
+positions, color, size, and shape. Below, each mark is a country,
+and we’re using shape and the y position to distinguish between
+country clusters.</p>
+  </li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="w">    </span><span class="n">gapminder</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"https://uwmadison.box.com/shared/static/dyz0qohqvgake2ghm4ngupbltkzpqb7t.csv"</span><span class="p">,</span><span class="w"> </span><span class="n">col_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cols</span><span class="p">())</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+      </span><span class="n">mutate</span><span class="p">(</span><span class="n">cluster</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="c1"># specify that cluster is nominal</span><span class="w">
+    </span><span class="n">gap2000</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">gapminder</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+      </span><span class="n">filter</span><span class="p">(</span><span class="n">year</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">2000</span><span class="p">)</span><span class="w"> </span><span class="c1"># keep only year 2000</span><span class="w">
+    </span><span class="n">ggplot</span><span class="p">(</span><span class="n">gap2000</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+      </span><span class="n">geom_point</span><span class="p">(</span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fertility</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cluster</span><span class="p">,</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cluster</span><span class="p">))</span></code></pre></figure>
+
+<p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-4-1.png" alt="" /></p>
+
+<ol>
+  <li>
+    <p><strong>Bar marks</strong> let us associate a continuous field with a nominal
+one.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(gap2000) +
+  geom_col(aes(country, pop))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-5-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>This plot can be improved. The grid lines and tick marks associated
+with each bar are distracting and the axis labels are all running
+over one another. We resolve this by changing the theme and turning
+the bars on their side[1]</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    ggplot(gap2000) +
+      geom_col(aes(pop, country)) +
+      theme(
+        panel.grid.major.y = element_blank(),
+        axis.ticks = element_blank() # remove tick marks
+      )
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-6-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>To make comparisons between countries with similar populations
+easier, we can order them by population (alphabetical ordering is
+not that meaningful). To compare clusters, we can color in the bars.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(gap2000) +
+   geom_bar(aes(pop, reorder(country, pop), fill = cluster), stat = "identity") +
+   theme(
+     axis.ticks = element_blank(),
+     panel.grid.major.y = element_blank()
+   )
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We’ve been spending a lot of time on this plot. This is because I
+want to emphasize that a visualization is not just something we can
+get just by memorizing some magic (programming) incantation.
+Instead, it is something worth critically engaging with and
+refining, in a similar way that we would refine an essay or speech.
+Philosophy aside, there are still a few points that need to be
+improved in this figure,</p>
+
+    <ul>
+      <li>The axis titles are not meaningful.</li>
+      <li>There is a strange gap between the left hand edge of the plot
+and the start of the bars.</li>
+      <li>I would also prefer if the bars were exactly touching one
+another, without the small vertical gap.</li>
+      <li>The scientific notation for population size is unnecessarily
+technical.</li>
+      <li>The color scheme is a bit boring…</li>
+    </ul>
+  </li>
+  <li>
+    <p>I’ve addressed each issue in the block below. Can you tell which
+piece of code makes which change? Try removing different components
+to verify your guesses.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cols &lt;- c("#80BFA2", "#7EB6D9", "#3E428C", "#D98BB6", "#BF2E21", "#F23A29")
+    ggplot(gap2000) +
+       geom_col(
+         aes(pop, reorder(country, pop), fill = cluster),
+         width = 1
+       ) +
+       scale_x_continuous(label = label_number_si(), expand = c(0, 0, 0.1, 0.1)) +
+       scale_fill_manual(values = cols) +
+       labs(x = "Population", y = "Country", fill = "Country Group", color = "Country Group") +
+       theme(
+         axis.ticks = element_blank(),
+         panel.grid.major.y = element_blank()
+       )
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-8-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p><strong>Segment marks</strong>. In the plot above, each bar is anchored at 0.
+Instead, we could have each bar encode two continuous values, a left
+and right. To illustrate, let’s compare the minimum and maximimum
+life expectancies within each country cluster. We’ll need to create
+a new data.frame with just the summary information. For this, we
+<code class="language-plaintext highlighter-rouge">group_by</code> each cluster, so that a summarise call finds the minimum
+and maximum life expectancies restricted to each cluster.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># find summary statistics
+life_ranges &lt;- gap2000 %&gt;%
+  group_by(cluster) %&gt;%
+  summarise(
+    min_life = min(life_expect),
+    max_life = max(life_expect)
+  )
+
+ggplot(life_ranges) +
+  geom_segment(
+    aes(min_life, reorder(cluster, max_life), xend = max_life, yend = cluster, col = cluster),
+    size = 5,
+  ) +
+  scale_color_manual(values = cols) +
+  labs(x = "Minimum and Maximum Expected Span", col = "Country Group", y = "Country Group") +
+  xlim(0, 85) # otherwise would only range from 42 to 82
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-9-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p><strong>Line marks</strong> are useful for comparing changes. Our eyes naturally
+focus on rates of change when we see lines. Below, we’ll plot the
+fertility over time, colored in by country cluster. The group
+argument is useful for ensuring each country gets its own line; if
+we removed it, ggplot2 would become confused by the fact that the
+same x (year) values are associated with multiple y’s (fertility
+rates).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    ggplot(gapminder) +
+      geom_line(
+        aes(year, fertility, col = cluster, group = country),
+          alpha = 0.7, size = 0.9
+      ) +
+      scale_x_continuous(expand = c(0, 0)) +  # same trick of removing gap
+      scale_color_manual(values = cols)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-10-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Area marks have a flavor of both bar and line marks. The filled area
+supports absolute comparisons, while the changes in shape suggest
+derivatives.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>population_sums &lt;- gapminder %&gt;%
+  group_by(year, cluster) %&gt;%
+  summarise(total_pop = sum(pop))
+
+ggplot(population_sums) +
+  geom_area(aes(year, total_pop, fill = cluster)) +
+  scale_y_continuous(expand = c(0, 0, .1, .1), label = label_number_si()) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = cols)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-11-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Just like in bar marks, we don’t necessarily need to anchor the
+y-axis at 0. For example, here the bottom and top of each area mark
+is given by the 30% and 70% quantiles of population within each
+country cluster.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>population_ranges &lt;- gapminder %&gt;%
+  group_by(year, cluster) %&gt;%
+  summarise(min_pop = quantile(pop, 0.3), max_pop = quantile(pop, 0.7))
+
+ggplot(population_ranges) +
+  geom_ribbon(
+    aes(x = year, ymin = min_pop, ymax = max_pop, fill = cluster),
+    alpha = 0.8
+  ) +
+  scale_y_continuous(expand = c(0, 0, .1, .1), label = label_number_si()) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = cols)
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-3/unnamed-chunk-12-1.png" alt="" /></p>
+  </li>
+</ol>
+
+<p>[1] An alternative is to turn rotate the labels by 90 degrees. I
+prefer to turn the whole plot this, because this way, readers don’t have
+to tilt their heads to read the country names.</p>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

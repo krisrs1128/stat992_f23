@@ -1,0 +1,45 @@
+---
+title: "Plant Growth"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+1. [Plant Growth Experiment] This problem will give you practice with tidying a
+dataset so that it can be easily visualized. The data describe the height of
+several plants measured every 7 days. The plants have been treated with
+different amounts of a growth stimulant. The first few rows are printed below --
+`height.x` denotes the height of the plant on day `x`.
+    
+    ```{r}
+    plants <- read_csv("https://uwmadison.box.com/shared/static/qg9gwk2ldjdtcmmmiropcunf34ddonya.csv")
+    ```
+    
+    a. Propose an alternative arrangement of rows and columns that conforms to the
+    tidy data principle.
+    
+```{r}
+head(plants)
+
+plants_reshaped <- plants %>%
+  pivot_longer(starts_with("height"), names_to = "day", values_to = "value") %>%
+  separate(day, c("tmp", "day"), convert = TRUE) %>%
+  select(-tmp)
+```
+    
+    b. Implement your proposed arrangement from part (a).
+    
+    c. Using the dataset from (b), design and implement a visualization showing the
+    growth of the plants over time according to different treatments.
+    
+    
+    
+```{r}
+ggplot(plants_reshaped) +
+  geom_line(aes(day, value, col = treatment, group = interaction(treatment, plantid))) +
+  facet_wrap(~ treatment)
+```
+    
+    

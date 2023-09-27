@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Uniform Manifold Approximation and Projection | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Uniform Manifold Approximation and Projection</h1>
+      <div class="post__meta">
+        <time>2022-06-02 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Nonlinear dimensionality reduction with UMAP</em></p>
+
+<p><a href="https://github.com/krisrs1128/stat679_code/tree/main/examples/week11/week11-3.Rmd">Code</a>,
+<a href="https://mediaspace.wisc.edu/media/Week%2010%20%5B4%5D%20Uniform%20Manifold%20Approximation%20and%20Projection/1_8tb5x1es">Recording</a></p>
+
+<ol>
+  <li>
+    <p>Nonlinear dimension reduction methods can give a more faithful
+representation than PCA when the data don’t lie on a low-dimensional
+linear subspace. For example, suppose the data were shaped like
+this. There is no one-dimensional line through these data that
+separate the groups well. We will need an alternative approach to
+reducing dimensionality if we want to preserve nonlinear structure.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(embed)
+theme_set(theme_minimal())
+
+moons &lt;- read_csv("https://uwmadison.box.com/shared/static/kdt9qqvonhcz2ssb599p1nqganrg1w6k.csv")
+ggplot(moons, aes(X, Y, col = Class)) +
+  geom_point() +
+  scale_color_brewer(palette = "Set2")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week11-3/unnamed-chunk-2-1.png" alt="An example nonlinear dataset where projections onto any straight
+line will necessarily cause the classes to bleed
+together." /></p>
+  </li>
+  <li>
+    <p>From a high-level, the intuition behind UMAP is to (a) build a graph
+joining nearby neighbors in the original high-dimensional space, and
+then (b) layout the graph in a lower-dimensional space. For example,
+consider the 2-dimensional sine wave below. If we build a graph, we
+can try to layout the resulting nodes and edges on a 1-dimensional
+line in a way that approximately preserves the ordering.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/sine_wave.png" alt="UMAP (and many other nonlinear methods) begins by constructing a graph in the high-dimensional space, whose layout in the lower dimensional space will ideally preserve the essential relationships between samples." width="400" />
+<p class="caption">
+UMAP (and many other nonlinear methods) begins by constructing a
+graph in the high-dimensional space, whose layout in the lower
+dimensional space will ideally preserve the essential relationships
+between samples.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>A natural way to build a graph is to join each node to its <em>K</em>
+closest neighbors. The choice of <em>K</em> will influence the final
+reduction, and it is treated as a hyperparameter of UMAP. Larger
+values of <em>K</em> prioritize preservation of global structure, while
+smaller <em>K</em> will better reflect local differences. This property is
+not obvious a priori, but is suggested by the simulations described
+in the reading.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/soft_neighborhoods.png" alt="When using fewer nearest neighbors, the final dimensionality reduction will place more emphasis on effectively preserving the relationships between points in local neighborhoods." width="400" />
+<p class="caption">
+When using fewer nearest neighbors, the final dimensionality
+reduction will place more emphasis on effectively preserving the
+relationships between points in local neighborhoods.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>One detail in the graph construction: In UMAP, the edges are
+assigned weights depending on the distance they span, normalized by
+the distance to the closest neighbor. Neighbors that are close,
+relative to the nearest neighbors, are assigned higher weights than
+those that are far away, and points that are linked by high weight
+edges are pulled together with larger force in the final graph
+layout. This is what the authors mean by using a ``fuzzy’’ nearest
+neighbor graph. The fuzziness allows the algorithm to distinguish
+neighbors that are very close from those that are far, even though
+they all lie within a <em>K</em>-nearest-neighborhood.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/soft_neighborhoods_large_k.png" alt="When using larger neighborhoods, UMAP will place more emphasis on preserving global structure, sometimes at the cost of local relationships between points." width="400" />
+<p class="caption">
+When using larger neighborhoods, UMAP will place more emphasis on
+preserving global structure, sometimes at the cost of local
+relationships between points.
+</p>
+
+</p>
+  </li>
+  <li>
+    <p>Once the graph is constructed, there is the question of how the
+graph layout should proceed. UMAP uses a variant of force-directed
+layout, and the global strength of the springs is another
+hyperparameter. Lower tension on the springs allow the points to
+spread out more loosely, higher tension forces points closer
+together. This is a second hyperparameter of UMAP.</p>
+
+    <p align="center">
+
+<img src="/stat679_notes/assets/week11-3/graph_layout.png" width="350" />
+
+</p>
+  </li>
+  <li>
+    <p>In R, we can implement this using almost the same code as we used
+for PCA. The <code class="language-plaintext highlighter-rouge">step_umap</code> command is available through the embed
+package.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>theme_set(theme_bw())
+cocktails_df &lt;- read_csv("https://uwmadison.box.com/shared/static/qyqof2512qsek8fpnkqqiw3p1jb77acf.csv")
+umap_rec &lt;- recipe(~., data = cocktails_df) %&gt;%
+  update_role(name, category, new_role = "id") %&gt;%
+  step_normalize(all_predictors()) %&gt;%
+  step_umap(all_predictors(), neighbors = 20, min_dist = 0.1)
+umap_prep &lt;- prep(umap_rec)
+ggplot(juice(umap_prep), aes(UMAP1, UMAP2)) +
+  geom_point(aes(color = category), alpha = 0.7, size = 0.8) +
+  geom_text(aes(label = name), check_overlap = TRUE, size = 3, hjust = "inward")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week11-3/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>We can summarize the properties of UMAP,</p>
+
+    <ul>
+      <li>Global or local structure: The number of nearest neighbors K
+used during graph construction can be used modulate the emphasis
+of global vs. local structure.</li>
+      <li>Nonlinear: UMAP can reflect nonlinear structure in
+high-dimensions.</li>
+      <li>No interpretable features: UMAP only returns the map between
+points, and there is no analog of components to describe how the
+original features were used to construct the map.</li>
+      <li>Slower: While UMAP is much faster than comparable nonlinear
+dimensionality reduction algorithms, it is still slower than
+linear approaches.</li>
+      <li>Nondeterministic: The output from UMAP can change from run to
+run, due to randomness in the graph layout step. If exact
+reproducibility is required, a random seed should be set.</li>
+    </ul>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content=""><title>Introduction to ggplot2 | Statistical Data Visualization</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/languages/r.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <meta name="keywords" content="">
+  <meta name="description" content=""><link rel="stylesheet" href="/stat992_f23/website/docs/assets/main.css?v=0.3.3" />
+<script src="/stat992_f23/website/docs/assets/main.js?v=0.3.3" defer></script><link rel="stylesheet" href="/stat992_f23/website/docs/assets/css/tomorrow.css" />
+<script src="/stat992_f23/website/docs/assets/js/highlight.js"></script><script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script><script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js" defer></script></head>
+<body class="body-post">
+    <a href="/stat992_f23/website/docs/" class="logo"><h1>Statistical Data Visualization</h1>
+</a><main class="post__wrapper"><div class="post__top_navs clearfix">
+    <nav class="post__archive_path"><a href="" id="archiveBtn">
+        <div class="post__archive_icon">
+          <svg width="40" height="40">
+            <circle class="circle-progress" r="18" cy="20" cx="20"  stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          <span class="post__archive_icon"></span>
+        </div>
+        Statistical Data Visualization
+      </a>
+    </nav>
+  </div>
+  <article class="post">
+    <header class="post__header">
+      <h1 class="post__title">Introduction to ggplot2</h1>
+      <div class="post__meta">
+        <time>2022-06-01 00:00</time>
+      </div>
+    </header>
+    <div class="post__content content">
+      <p><em>Design principles from the grammar of graphics.</em></p>
+
+<p><a href="https://mediaspace.wisc.edu/media/Week+1-+1A+Introduction+to+ggplot2/1_x4qfp03g">Recording</a>,
+<a href="https://github.com/krisrs1128/stat679_code/blob/main/notes/week1-1.Rmd">Code</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>library(tidyverse)
+library(ggrepel)
+library(scales)
+library(dslabs)
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>ggplot2 is an R implementation of the Grammar of Graphics. The idea
+is to define the basic “words” from which visualizations are built,
+and then let users compose them in original ways. This is in
+contrast to systems with prespecified chart types, where the user is
+forced to pick from a limited dropdown menu of plots. Just like in
+ordinary language, the creative combination of simple building
+blocks can support a very wide range of expression.</p>
+  </li>
+  <li>
+    <p>In these notes, we’ll create this plot.</p>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-3-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>But before writing any code, let’s review the main ideas of ggplot2.
+Every ggplot2 plot is made from three components,</p>
+
+    <ul>
+      <li>Data: This is the data.frame that we want to visualize.</li>
+      <li>Geometry: These are the types of visual marks that appear on the
+plot.</li>
+      <li>Aesthetic Mapping: This links the data with the visual marks.</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Data</strong>. Each row is an observation, and each column is an
+attribute that describes the observation. This is important because
+each mark that you see on a ggplot – a line, a point, a tile, … –
+had to start out as a row within an R data.frame. The visual
+properties of the mark (e.g., color) are determined by the values
+along columns. These type of data are often referred to as tidy
+data.</p>
+  </li>
+  <li>
+    <p>Here’s an example of the data above in tidy format,</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data(murders)
+head(murders)
+
+##        state abb region population total
+## 1    Alabama  AL  South    4779736   135
+## 2     Alaska  AK   West     710231    19
+## 3    Arizona  AZ   West    6392017   232
+## 4   Arkansas  AR  South    2915918    93
+## 5 California  CA   West   37253956  1257
+## 6   Colorado  CO   West    5029196    65
+</code></pre></div>    </div>
+
+    <p>This is one example of how the same information might be stored in a
+non-tidy way, making visualization much harder.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>non_tidy &lt;- data.frame(t(murders))
+colnames(non_tidy) &lt;- non_tidy[1, ]
+non_tidy &lt;- non_tidy[-1, ]
+non_tidy[, 1:6]
+
+##             Alabama   Alaska  Arizona Arkansas California Colorado
+## abb              AL       AK       AZ       AR         CA       CO
+## region        South     West     West    South       West     West
+## population  4779736   710231  6392017  2915918   37253956  5029196
+## total           135       19      232       93       1257       65
+</code></pre></div>    </div>
+
+    <p>Often, one of the hardest parts in making a ggplot2 plot is not
+coming up with the right ggplot2 commands, but reshaping the data so
+that it’s in a tidy format.</p>
+  </li>
+  <li>
+    <p><strong>Geometry</strong> The words in the grammar of graphics are the geometry
+layers. We can associate each row of a data frame with points,
+lines, tiles, etc., just by referring to the appropriate geom in
+ggplot2. A typical plot will compose a chain of layers on top of a
+dataset,</p>
+
+    <blockquote>
+      <p>ggplot(data) + [layer 1] + [layer 2]</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>For example, by deconstructing the plot above, we would expect to
+have point and text layers. For now, let’s just tell the plot to put
+all the geom’s at the origin. You can see all the types of geoms in
+the <a href="https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf">cheat
+sheet</a>.
+We’ll be experimenting with a few of these in a <a href="https://krisrs1128.github.io/stat679_notes/2022/06/01/week1-3.html">later
+lecture</a>.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders) +
+  geom_point(x = 0, y = 0) +
+  geom_text(x = 0, y = 0, label = "test")
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-6-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p><strong>Aesthetic Mapping</strong> Aesthetic mappings make the connection between
+the data and the geometry. It’s the piece that translates abstract
+data fields into visual properties. Analyzing the original graph, we
+recognize these specific mappings.</p>
+
+    <ul>
+      <li>State Population → x-axis coordinate</li>
+      <li>Number of murders → y-axis coordinate</li>
+      <li>Geographical region → color</li>
+    </ul>
+  </li>
+  <li>
+    <p>To establish these mappings, we need to use the aes function. Notice
+that column names don’t have to be quoted – ggplot2 knows to refer
+back to the data.frame in ggplot(murders).</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders) +
+  geom_point(aes(x = population, y = total, col = region))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-7-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>The plot at the start of these notes used a log-scale. To transform
+the x and y axes, we can use scales.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders) +
+  geom_point(aes(x = population, y = total, col = region)) +
+  scale_x_log10() +
+  scale_y_log10()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-8-1.png" alt="" /></p>
+
+    <p>One nuance is that scales aren’t limited to x and y transformations.
+They can be applied to modify any relationship between a data field
+and its appearance on the page. For example, this changes the
+mapping between the region field and circle color.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders) +
+  geom_point(aes(x = population, y = total, col = region)) +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_color_manual(values = c("#6a4078", "#aa1518", "#9ecaf8", "#50838c"))
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-9-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>A problem with this graph is that it doesn’t tell us which state
+each point corresponds to. For that, we’ll need text labels. We can
+encode the coordinates for these marks again using aes, but this
+time within a <code class="language-plaintext highlighter-rouge">geom_text</code> layer.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders) +
+  geom_point(aes(x = population, y = total, col = region)) +
+  geom_text(
+    aes(x = population, y = total, label = abb),
+    nudge_x = 0.08 # what would happen if I remove this?
+  ) +
+  scale_x_log10() +
+  scale_y_log10()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-10-1.png" alt="" /></p>
+
+    <p>Note that each type of layer uses different visual properties to
+encode the data – the argument label is only available for the
+<code class="language-plaintext highlighter-rouge">geom_text</code> layer. You can see which aesthetic mappings are required
+for each type of geom by checking that geom’s documentation page,
+under the Aesthetics heading.</p>
+  </li>
+  <li>
+    <p>It’s usually a good thing to make your code as concise as possible.
+For ggplot2, we can achieve this by sharing elements across aes
+calls (e.g., not having to type population and total twice). This
+can be done by defining a “global” aesthetic, putting it inside the
+initial ggplot call. We can also use the fact that the first two
+arguments of <code class="language-plaintext highlighter-rouge">aes</code> are always the <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> positional mappings.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ggplot(murders, aes(population, total)) +
+  geom_point(aes(col = region)) +
+  geom_text(aes(label = abb), nudge_x = 0.08) +
+  scale_x_log10() +
+  scale_y_log10()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-11-1.png" alt="" /></p>
+  </li>
+  <li>
+    <p>How can we improve the readability of this plot? You might already
+have ideas,</p>
+
+    <ul>
+      <li>Prevent labels from overlapping. It’s impossible to read some of
+the state names.</li>
+      <li>Add a line showing the national rate. This serves as a point of
+reference, allowing us to see whether an individual state is
+above or below the national murder rate.</li>
+      <li>Give meaningful axis / legend labels and a title.</li>
+      <li>Move the legend to the top of the figure. Right now, we’re
+wasting a lot of visual real estate in the right hand side, just
+to let people know what each color means.</li>
+      <li>Use a better color theme.</li>
+    </ul>
+  </li>
+  <li>
+    <p>For each of the problems above, we have the corresponding solution
+techniques,</p>
+
+    <ul>
+      <li>The ggrepel package. This tries to find better label positions,
+using lines when necessary.</li>
+      <li>Use <code class="language-plaintext highlighter-rouge">geom_abline</code> to encode the national murder rate as the
+slope and intercept in a line graph. All states would lie on
+this line if their murder rate was equal to the national
+average.</li>
+      <li>Add a labs layer to write labels and a theme to reposition the
+legend. I used <code class="language-plaintext highlighter-rouge">label_number</code> from the scales package to change
+the scientific notation in the <em>x</em>-axis labels to something more
+readable.</li>
+      <li>I find the gray background with reference lines a bit
+distracting. We can simplify the appearance using
+<code class="language-plaintext highlighter-rouge">theme_minimal</code>. I also like the colorbrewer palette, which can
+be used by calling a different color scale.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Putting all these modifications together yields</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r &lt;- murders %&gt;%
+  summarize(rate = sum(total) /  sum(population)) %&gt;%
+  pull(rate)
+
+ggplot(murders, aes(population, total)) +
+  geom_abline(intercept = log10(r), size = 0.4, col = "#b3b3b3") +
+  geom_text_repel(aes(label = abb), segment.size = 0.2) +
+  geom_point(aes(col = region)) +
+  scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  scale_y_log10() +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    x = "Population (log scale)",
+    y = "Total number of murders (log scale)",
+    color = "Region",
+    title = "US Gun Murders in 2010"
+  ) +
+  theme_minimal()
+</code></pre></div>    </div>
+
+    <p><img src="/stat679_notes/assets/week1-2/unnamed-chunk-12-1.png" alt="" /></p>
+  </li>
+</ol>
+
+    </div>
+  </article></main><script>hljs.initHighlightingOnLoad();</script><footer class="site-footer">
+  © 2023<a href="/stat992_f23/website/docs/">Statistical Data Visualization</a>. Theme<a href="https://github.com/erlzhang/jekyll-theme-persephone" target="_blank">Persephone</a>
+</footer>
+
+  </body>
+</html>

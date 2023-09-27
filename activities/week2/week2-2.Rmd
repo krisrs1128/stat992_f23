@@ -1,0 +1,34 @@
+---
+title: "Wildfires"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+1. [California Wildfires] In this problem, we will interactively visualize a
+[dataset](https://uwmadison.box.com/shared/static/k5vvekf1bhh9e16qb9s66owygc70t7dm.csv)
+giving statistics of recent California wildfires. The steps below guide you
+through the process of building this visualization.
+    
+```{r}
+library(tidyverse)
+theme_set(theme_bw())
+fires <- read_csv("https://uwmadison.box.com/shared/static/k5vvekf1bhh9e16qb9s66owygc70t7dm.csv")
+```
+
+a. (Static) Plot the day of the year that each fire started against the
+county within which it was located. Use the size of the mark to encode the
+number of acres burned in each fire.
+
+b. (Interactive) Provide a way for the viewer to interactively highlight or
+reveal details about subsets of fires. For example, introduce a slider to
+interactively highlight selected years, a tooltip to highlight the name of a
+fire, or a select to search for counties, or a slider to filter by fire
+size.
+
+c. Introduce at least one other UI output. For example, print a table of the
+selected fires, interactively print summary statistics, or show a histogram
+of fire sizes. Sketch the reactivity graph associated with your application.
+https://uwmadison.box.com/shared/static/k5vvekf1bhh9e16qb9s66owygc70t7dm.csv
