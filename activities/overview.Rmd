@@ -764,7 +764,8 @@ Hint: This problem is similar to the example in Week 3 - 2: Brush Inputs.
 resources about or have questions about R, ggplot2, or Shiny, please reach out.
 1. Problem Set 1 is due October 2
 1. Project Milestone 1 is due October 16
-1. For group submissions, remember there is an team accountabilty form.
+1. The deadline for Exercise 3.1 was extended to Tuesday. You will be able to
+re-submit without a penalty.
 
 ---
 
@@ -796,7 +797,7 @@ Resolution: What have we learned more generally?
 1. A common problem in data science projects are that they become too abstract /
 have no clear intended audience.
 1. The project should be interesting because of what it says about real world
-phenomena which are interseting within your community -- don't talk about data
+phenomena which are interesting within your community -- don't talk about data
 without context.
 
 ---
@@ -839,14 +840,6 @@ it creates a center around which many approaches can be explored
 your peers
 1. Their responses may reveal unwarranted assumptions you have made or point you
 towards a previously unnoticed path forward
-
----
-
-### Reflection and Questions
-
-With your project group, take 5 minutes to brainstorm a list of conceptual or
-logistical questions you have related to the project. We will discuss these as a
-group.
 
 ---
 
