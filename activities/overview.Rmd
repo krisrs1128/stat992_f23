@@ -863,7 +863,7 @@ towards a previously unnoticed path forward
 
 * [NYC Rentals]. This is another exercise in brushing (an old HW problem)
 
-* Demo link: []()
+* Demo link: [https://go.wisc.edu/4vt23t](https://go.wisc.edu/4vt23t)
 
 ---
 
