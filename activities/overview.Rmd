@@ -769,6 +769,22 @@ re-submit without a penalty.
 
 ---
 
+The code in Exercise 3.1 had been cutoff. Here is the full definition of `bird_summaries`.
+
+```{r, eval = FALSE}
+bird_summaries <- birds %>%
+  group_by(genus) %>%
+  summarise(
+    across(
+      c("Asymmetry", "Ellipticity", "AvgLength (cm)", 
+        "Number of images", "Number of eggs"), 
+      list(MEAN = mean, STANDARD_DEVIATION = sd))) %>%
+  arrange(-Ellipticity_MEAN)
+```
+
+
+---
+
 ### Project Reflections
 
 1. How should you approach your course project?
