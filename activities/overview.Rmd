@@ -875,3 +875,186 @@ sheet.
 
 
 ---
+
+
+### October 3, 2023
+
+1. Intro to D3 / Workflow Setup
+1. In-Class Demo 4.1
+1. In-Class Exercise 4.1
+
+---
+
+### Announcements
+
+1. Solutions to Problem Set 1 will be posted after the final deadline for late
+assignments. Consider reviewing even if you understood exercises -- you might
+find alternative solutions or ways to improve the presentation of your
+submission.
+1. Problem Set 2 is posted and [Due October 23]
+1. Start early! The midterm is in-class on October 26.
+
+---
+
+### Introduction to D3
+
+1. D3 is a visualization library written in javascript.
+1. It operates at a much lower level than R / ggplot2. This both makes it much
+more flexible, but also requires more effort to work with.
+1. Unlike Shiny, it can modify visualizations in place, since it doesn't depend
+on transitions between static image views.
+
+---
+
+Smooth transitions in a barchart, from the D3 collection on [Observable](https://observablehq.com/@d3/bar-chart-transitions).
+
+<iframe width="100%" height="550"
+  src="https://observablehq.com/embed/@d3/sortable-bar-chart?cell=viewof+order&cell=chart"></iframe>
+
+---
+
+A D3-based
+[animation](https://observablehq.com/@mbostock/connected-particles-iii) written
+by the original developer of D3, Mike Bostock.
+
+<iframe width="100%" height="550" frameborder="0"
+  src="https://observablehq.com/embed/@mbostock/connected-particles-iii?cells=canvas%2Cn%2Cheight%2Cradius"></iframe>
+
+---
+
+.pull-left[
+A [narrative visualization](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/) introducing machine learning to a broader audience.
+]
+
+<img src="figures/leaf_nodes.png" width=800/>
+
+---
+
+### Workflow Setup
+
+1. To build D3 visualizations, we will mainly be editing `.html`, `.css`, and
+`.js` files. This can be done in Rstudio, but other text editors work as well
+(e.g., VSCode, Atom, Emacs, ...).
+1. You will not need it this week, but starting next week, you will need to have
+a python installation on your computer. This will be used to start a server
+needed for loading data.
+1. It's possible to incorporate D3 visualizations into Rmarkdown reports and
+Shiny Apps. It is a somewhat more advanced topic, and we will only briefly touch
+on this.
+
+---
+
+### Workflow Setup
+
+Let's test our setup by editing a simple [HTML
+file](https://github.com/krisrs1128/stat679_code/raw/main/examples/week4/week4-1/example_headings.html).
+Work with your neighbors in case you have any difficulty.
+
+```{html}
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <h1>This is a Header</h1>
+    <p>This text is in a paragraph</p>
+  </body>
+</html>
+```
+
+---
+
+### Workflow Setup
+
+1. Let's make sure you can add a `.js` file to do some computation in the
+background.
+1. You'll also want to be able to use your browser's developer tools. 
+
+.pull-left[
+`example_headings.html`
+```{html}
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <h1>This is a Header</h1>
+    <p>This text is in a paragraph</p>
+  </body>
+  <script src="example.js"></script>
+</html>
+```
+]
+
+.pull-right[
+`example.js`
+```{js}
+let x = [1, 2, 3];
+console.log(x);
+```
+]
+
+---
+
+### Code Demo 4.1 [Draw a Smiley Face]
+
+* This is an exercise in manipulating SVGs to draw a custom shape.
+
+* [Link]
+
+---
+
+### In-Class Exercise 4.1 [Penguins Array Manipulation a - b]
+
+[Penguins Array Manipulation] - Only parts (a, b)
+
+* When you write your solution, you can still use `.Rmd` documents, but set
+`eval = FALSE` in any `js` code blocks so that Rstudio doesn't try to compile
+the code.
+* Hint: For part (b), refer to the example in Notes 4 - 2. For part (c), a one
+line solution is possible using `map()`.
+
+---
+
+### October 5, 2023
+
+1. Exercise review 4.1
+1. In-Class Demo 4.2
+1. Discussion
+1. In-Class Exercise 4.2
+
+---
+
+### Announcements
+
+---
+
+### Exercise Review
+
+---
+
+### In-Class Demo [4.2]
+
+* We will work through [Modifying Selections] together
+
+* [Link]
+
+---
+
+### Discussion
+
+With others at your table, discuss any (or all) of the following prompts for
+6 - 8 minutes.
+
+* What originally motivated you to learn data visualization?
+* Which of your personal values are reflected in your visualization interests?
+* How might learning javascript or D3 relate to these original motivations / values?
+
+---
+
+### In-Class Exercise [4.2]
+
+* Work through [Debugging JS Code] parts (b - d) in the exercises sheet. Discuss
+with your team, but submit individually.
+
+---
