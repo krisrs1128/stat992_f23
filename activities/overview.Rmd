@@ -947,7 +947,7 @@ on this.
 ### Workflow Setup
 
 Let's test our setup by editing a simple [HTML
-file](https://github.com/krisrs1128/stat679_code/raw/main/examples/week4/week4-1/example_headings.html).
+file](https://github.com/krisrs1128/stat992_f23/blob/main/examples/week4/week4-1/example_headings.html).
 Work with your neighbors in case you have any difficulty.
 
 ```{html}
@@ -998,9 +998,9 @@ console.log(x);
 
 ### Code Demo 4.1 [Draw a Smiley Face]
 
-* This is an exercise in manipulating SVGs to draw a custom shape.
+This is an exercise in manipulating SVGs to draw a custom shape.
 
-* [Link]
+* Link: [https://go.wisc.edu/99c43g](https://go.wisc.edu/99c43g)
 
 ---
 
