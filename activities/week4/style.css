@@ -1,0 +1,10 @@
+
+.base {
+  fill: yellow;
+  stroke-width: 2px;
+  stroke: black;
+}
+
+.eye {
+  fill: blue;
+}
