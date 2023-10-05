@@ -1034,6 +1034,16 @@ line solution is possible using `map()`.
 
 ---
 
+### Beautiful Visualizations
+
+Some generative art examples:
+
+* [https://openprocessing.org/sketch/1558921/](https://openprocessing.org/sketch/1558921/)
+* [https://openprocessing.org/sketch/1270538/](https://openprocessing.org/sketch/1270538/)
+* [https://openprocessing.org/sketch/1608326/](https://openprocessing.org/sketch/1608326/)
+
+---
+
 ### Exercise Review
 
 For each of `penguins` and `penguins2`, describe whether the data structure is
@@ -1129,7 +1139,7 @@ With others at your table, discuss any (or all) of the following prompts for
 
 * We will work through [Modifying Selections] together
 
-* [Link]
+* [https://go.wisc.edu/96bu43](https://go.wisc.edu/96bu43)
 
 ---
 
