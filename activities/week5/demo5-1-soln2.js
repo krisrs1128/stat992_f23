@@ -12,13 +12,8 @@ function update() {
     .selectAll("circle")
     .data(circle_ages, d => d.id)
     .join(
-        enter => enter.append("circle").attrs({cx: 0, cy: 0}),
-        update => update.call(
-          u => u.transition().attrs({
-            cx: d => (900 / 5) * (d.age - 1),
-            cy: 250
-          })
-        ),
-        exit => exit.call(u => u.transition().attr("cy", 500).remove())
+      enter => enter.append("circle").attrs({cx: 0, cy: 0}),
+      update => update.transition().attrs({cx: d => (d.age - 1) * 900 / 5, cy: 250}),
+      exit => exit.transition().attrs({cy: 500}).remove()
     )
 }
