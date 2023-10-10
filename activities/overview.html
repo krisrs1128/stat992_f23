@@ -1042,16 +1042,6 @@ line solution is possible using `map()`.
 
 ---
 
-### Beautiful Visualizations
-
-Some generative art examples:
-
-* [https://openprocessing.org/sketch/1558921/](https://openprocessing.org/sketch/1558921/)
-* [https://openprocessing.org/sketch/1270538/](https://openprocessing.org/sketch/1270538/)
-* [https://openprocessing.org/sketch/1608326/](https://openprocessing.org/sketch/1608326/)
-
----
-
 ### Exercise Review
 
 For each of `penguins` and `penguins2`, describe whether the data structure is
@@ -1160,6 +1150,186 @@ With others at your table, discuss any (or all) of the following prompts for
 
 * Work through [Debugging JS Code] parts (b - d) in the exercises sheet. Discuss
 with your team, but submit individually.
+
+---
+
+
+### October 10, 2023
+
+1. Exercise review 4.2
+1. Discussion 5.1
+1. In-Class Demo 5.1
+1. In-Class Exercise 5.1
+
+---
+
+### Announcements
+
+1. Wednesday OH are moved to 9:45 - 11am
+1. Project Milestone 1 is due [October 16]
+1. Problem Set 2 is due [October 23]
+1. Midterm 2 will be held in-class on [October 26]
+    * An example midterm + solutions has been posted. 
+    * The content and format will be similar (multiple T/F, pseudocode writing,
+    and discussion).
+    * The instructions will be the same. E.g., you may use a one page cheat
+    sheet.
+
+---
+
+### Beautiful Visualizations
+
+Some generative art examples:
+
+* [https://openprocessing.org/sketch/1558921/](https://openprocessing.org/sketch/1558921/)
+* [https://openprocessing.org/sketch/1270538/](https://openprocessing.org/sketch/1270538/)
+* [https://openprocessing.org/sketch/1608326/](https://openprocessing.org/sketch/1608326/)
+
+---
+
+### Exercise Review 
+
+Goal: I want to try to get the average of the “temp_max” array in
+“forecast” below.
+
+Attempt: Here is my [HTML](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2a.html) and [JS](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2a.js) file. This is the part that I think is
+relevant,
+
+```r
+let forecast = {temp_max: [22, 24, 28, 21], temp_min: [15, 14, 21, 24]}
+d3.mean(forecast[0])
+```
+Problem: The console prints the error message,
+```
+ Uncaught TypeError: t is not iterable at t.mean (d3-array@3:2:13861) at in_class4-2a.js:3:4 
+```
+
+---
+
+### Exercise Review (part a, not required)
+
+Solution: To index into objects, we need to use a key.
+
+
+```r
+d3.mean(forecast["temp_max"])
+```
+
+---
+
+### Exercise Review (part b)
+
+b. Goal: I want to change the color of all the circles on my [HTML page](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2b.html) to blue. 
+
+Attempt:
+Here is my [HTML](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2b.html) and [JS](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2b.js) file. This is the part that I think is relevant,
+
+```r
+d3.select("circle")
+  .attr("fill", "blue")
+```
+Problem: Only the color of the one circle [is changing](https://github.com/krisrs1128/stat679_code/blob/main/exercises/figure/d3_bugs.png).
+
+---
+
+### Exercise Review (part b)
+
+Solution: If there are multiple matches, `d3.select` will only select the first
+element. We need to use `d3.selectAll`.
+
+
+```r
+d3.selectAll("circle")
+  .attr("fill", "blue")
+```
+
+---
+
+### Exercise Review (part c)
+
+Goal: I want to change the color of all the class “highlighted” squares.
+
+Attempt: Here is my [HTML](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2c.html) and [JS](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2c.js) file. This is the part that I think is relevant,
+
+```r
+d3.selectAll("highlighted")
+  .attr("fill", "red")
+```
+Problem: Nothing is changing.
+
+---
+
+### Exercise Review (part c)
+
+Solution: Class selectors need to be preceded by a period. The code below would
+work,
+
+
+```r
+d3.selectAll(".highlighted")
+  .attr("fill", "red")
+```
+
+---
+
+### Exercise Review (part d)
+
+Goal: I want to move the circle to location 100, 200 on the SVG canvas.
+    
+Attempt: Here is my [HTML](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2d.html) and [JS](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week4/in_class4-2d.js) file. This is the part that I think is relevant,
+
+```r
+d3.select("#my_circle")
+  .attrs({ x: 100, y: 200 })
+```
+Problem: It is not moving.
+
+---
+
+### Exercise Review (part d)
+
+Solution: The position of SVG circles is set by attributes called `cx` and `cy`, not `x`
+and `y`.
+
+
+```r
+d3.select("#my_circle")
+  .attrs({ cx: 100, cy: 200 })
+```
+
+---
+
+### Discussion
+
+What are some technical or analytical skills you feel (i) you have improved in
+or (ii) you would like to develop further? What kinds of practice might help
+with (ii)?
+
+* Please write your thoughts at [https://go.wisc.edu/q88x30]( https://go.wisc.edu/q88x30)
+* If someone writes something you also felt, add a +1 (or +2, ...)
+* I will ask teams to share their thoughts.
+
+---
+
+
+### In-Class Demo [5.1]
+
+* We will work through [Marching Circles] together
+
+* [Link]
+
+---
+
+### In-Class Exercise [5.1]
+
+In this exercise, we'll brainstorm and share feedback about one another's
+upcoming project milestones.
+
+* Summarize your discussion at [https://go.wisc.edu/j20197](https://go.wisc.edu/j20197)
+* Also submit your notes to Canvas
+
+---
+
 
 ---
     </textarea>
