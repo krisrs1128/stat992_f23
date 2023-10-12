@@ -6,8 +6,8 @@ let generator = d3.randomUniform(-1, 1);
 
 for (let i = 0; i < 100; i++) {
   circles.push({
-    x: width * generator(), // initial x coordinate
-    y: height * generator(), // initial y coordinate
+    x: width * Math.abs(generator()), // initial x coordinate
+    y: height * Math.abs(generator()), // initial y coordinate
     vx: 0, // initial velocity in x direction
     vy: 0 // initial velocy in y direction
   })
