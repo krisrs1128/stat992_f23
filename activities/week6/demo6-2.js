@@ -141,6 +141,15 @@ function highlight_city(ev, d) {
       opacity: e => e.city == d.city ? 0.4 : 0.05,
       "stroke-width": e => e.city == d.city ? 1 : 0.2
     })
+
+  for (const tag of ["#circles_2000", "#circles_2010"]) {
+    d3.select(tag)
+      .selectAll("circle")
+      .attrs({
+        opacity: e => e.city == d.city ? 1 : 0.2,
+        r: e => e.city == d.city ? 3 : 1
+      })
+  }
 }
 
 let scales = make_scales()
