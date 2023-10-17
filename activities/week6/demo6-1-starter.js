@@ -9,7 +9,18 @@ function make_scales() {
 
 let scales = make_scales();
 
-// create bars for each year
+// create the barchart
 d3.select("#bars_2010")
 
-// add the labels
+
+// create the barchart country labels
+
+
+// create the scatterplot
+
+
+
+// draw the slope lines
+
+
+// create a plot title
