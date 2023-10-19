@@ -1422,6 +1422,7 @@ these in the next lecture).
 1. Review Exercise 6.1
 1. In-Class Demo 6.2
 1. Discussion - Problem set resources
+1. (No in-class exercise)
 
 ---
 
@@ -1433,7 +1434,91 @@ to Week 5 - 4.
 
 ---
 
+### Problem Set 2 Comments
+
+[Random Point Transitions]
+1. The uniform generation code was modified on Monday -- make sure to use an updated version of the slides.
+1. Here are example outputs.
+  - [Part (b)](file:///Users/ksankaran/Desktop/teaching/course_exercises/stat992_f23/ps2/q3b.html)
+  - [Part (c)](file:///Users/ksankaran/Desktop/teaching/course_exercises/stat992_f23/ps2/q3c.html)
+
+---
+
+### Beautiful Visualizations
+
+<img src="figures/oscar_bump.jpg"/> 
+
+---
+
+### Beautiful Visualizations
+
+[2019 was hotter than normal — but what does this even mean?](https://www.vis4.net/blog/2019-too-warm#/en/2019/12/31)
+
+[Source Code](https://github.com/vis4/2019-too-warm)
+
+---
+
 ### Exercise Review
+
+[circleSequence-8.js](https://github.com/krisrs1128/stat679_code/blob/716c8fa8fdd36fc9d2bbb4046affa5496897cbcd/examples/week5/week5-1/circleSequence-8.js#L4) from the [Week 5-1 notes](https://krisrs1128.github.io/stat992_f23/website/docs/2022/06/01/week5-1.html).
+
+```{r, eval = FALSE}
+d3.select("svg")
+  .selectAll("circle") // ??? not sure why we have to selectAll circles if there is nothing there yet
+  .data(circles).enter() // append ten "circle" elements with the specified attributes to the svg 
+
+```
+
+---
+
+1. This is probably the most confusing aspect of the enter/exit/update pattern.
+1. We have to call `.selectAll` on elements that are not there because _it determines the data bind's context_.
+1 Interpretation of `enter` and `exit`
+  - Array elements not associated with existing HTML tag $\to$ `enter` selection
+  - HTML tags not associated with existing array elements $\to$ `exit` selection
+1. If we call `selectAll()` when there are no associated HTML tags, then all the
+array elements will be associated with `enter`
+
+---
+
+### Exercise Review
+
+[In-Class Demo 5.1](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week5/demo5-1.js)
+
+ I don’t know if I fully understand what .enter() and .exit() are used for. Is
+ .exit() for removing elements?
+
+```{r, eval = FALSE}
+selection.enter()#???
+  .append("circle") #
+  .attrs({ #set attributes of the cirlce x to 0 and y to 0
+    cx: 0,
+    cy: 0
+  })
+```
+
+---
+
+### Exercise Review
+
+1. `enter()` and `exit()` are definitely related to adding/removing elements, but that is not how I would define them
+1. `append()` and `remove()` are the functions that actually do the HTML tag manipulation (adding and removing elements).
+1. Instead, `enter()` and `exit()` are keeping track of the relationship between data array elements and HTML tags.
+  - They measure the gap in the correspondence between these two representations
+
+---
+
+### Exercise Review
+
+[In-class Demo 6.1](https://github.com/krisrs1128/stat992_f23/blob/main/activities/week6/demo6-1.js)
+
+```{r, eval = FALSE}
+let label_data = data.filter(d => d.density_2010 > 19600)
+// ???
+d3.select("#slope_labels_2000")
+  .selectAll("text")
+  ...
+```
 
 ---
 
