@@ -1446,7 +1446,8 @@ to Week 5 - 4.
 
 ### Beautiful Visualizations
 
-<img src="figures/oscar_bump.jpg"/> 
+<img src="figures/oscar_bump.jpg" width=400/> 
+
 
 ---
 
@@ -1520,13 +1521,17 @@ d3.select("#slope_labels_2000")
   ...
 ```
 
+This is adding text labels with the city names and population densities for all
+the cities above a certain population density in 2010.
+
 ---
 
 ### In-Class Demo [6.2]
 
 * We will work through [Urbanization Linked Plots II] together
 
-* [Link]
+* Code: https://go.wisc.edu/08xvcd
+* Whiteboard: https://go.wisc.edu/c5rb68
 
 ---
 
