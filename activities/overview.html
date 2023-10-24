@@ -1581,6 +1581,127 @@ When you add these to the discussion document, include,
   * A link to the resource
   * A brief description of the resource
   * An explanation of why the resource is relevant for the problem
+
+---
+
+### October 24, 2023
+
+1. Hosting Visualizations
+1. In-Class Demo 7.1 (Maybe)
+1. In-Class Exercise 7.1
+
+---
+
+### Announcements
+
+1. We have passed the foundations and are now in the data-centric modules of the
+course
+1. The midterm will be held in-class on [October 26] and will include material up
+to Week 5 - 4.
+1. Problem Set 3 is posted and will be due [November 13].
+
+---
+
+### Hosting Visualizations
+
+1. GitHub Pages
+  - Simple page setup
+  - Setup with Jekyll
+1. R2D3
+  - Within Rmarkdown
+  - Within Shiny apps
+1. Observable
+
+---
+
+### GitHub Pages
+
+* [This link](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
+describes how to create a public webpage starting from an empty GitHub
+repository.
+* The key steps are on the "Pages" menu on the repository's settings tab
+
+.center[
+&lt;img src="figures/github_pages.png" width=600/&gt;
+]
+
+---
+
+### GitHub Pages
+
+* If you already have a github repository, try [forking this repository](https://github.com/krisrs1128/stat679_test) ([https://go.wisc.edu/129bbs](https://go.wisc.edu/129bbs))
+* Follow along to make an HTML page public
+
+---
+
+### Jekyll
+
+* There are many sites that offer website templates (many more than I can review)
+  - E.g., search for "Free Bootstrap Templates"
+  - The directions will vary from service to service, but at some point they
+  provide HTML pages that you can edit
+* My favorite approach uses Jekyll (this is how the course notes page was created)
+
+---
+
+### Jekyll Workflow
+
+* You have to install the [jekyll](https://jekyllrb.com/) command line program
+* Create a new site using `jekyll new test`
+* Add a theme by modifying the `Gemfile` and `_config.yml`. For example, to add the simplex theme, use
+  - (Gemfile) Replace `gem "minima"` with `gem "jekyll-theme-persephone"`
+  - (Config) `theme: minima` with `theme: jekyll-theme-persephone`
+* Setup the page with `bundle install`
+* Run the site with `bundle exec jekyll serve`
+* Many example themes available on the [jekyll themes website](http://jekyllthemes.org/)
+
+---
+
+### R2D3
+
+* R2D3 is an R package that lets you wrap D3 code within Rmarkdown documents and
+Shiny apps
+* See [the r2d3-countries](https://github.com/krisrs1128/stat992_f23/tree/main/activities/week7)
+example for how to reproduce last week's demo within an Rmarkdown notebook
+* We can also pass in data from R into D3. See the [r2d3-data example](https://github.com/krisrs1128/stat992_f23/tree/main/activities/week7)
+
+---
+
+### Observable
+
+Finally, you can share D3-based notebooks using the Observable.
+
+* Advantage: Don't have to host pages yourself
+* Disadvantage: Dependencies between notebook cells require extra care
+
+&lt;img src="figures/observe_homepage.png" width=600/&gt;
+
+---
+
+### In-Class Demo
+
+* Let's work through [NYC Trees]
+
+* [https://go.wisc.edu/sn1pkz]( https://go.wisc.edu/sn1pkz)
+
+---
+
+### In-Class Exercise
+
+Work through [Job Interview] in the exercises sheet, with the topic of static
+spatial or temporal data visualization. Upload your response to Canvas and also
+add it to [https://go.wisc.edu/06sb3b](https://go.wisc.edu/06sb3b).
+
+
+[Job Interview] Imagine that you are interviewing job candidates for a data
+science position that involves visualizing Temporal or Geospatial data. Prepare
+an interview question that test candidates' knowledge of / experience with these
+topics. Also prepare examples of strong responses. A good question will either
+(i) ask the interviewee to describe a specific time in the past where they used
+the concept or (ii) present the interviewee with a type of challenge related to
+what is commonly encountered and see how they would address it.
+    
+---
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
