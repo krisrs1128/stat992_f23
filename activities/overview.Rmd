@@ -1679,3 +1679,122 @@ the concept or (ii) present the interviewee with a type of challenge related to
 what is commonly encountered and see how they would address it.
     
 ---
+
+### October 31, 2023
+
+1. In-Class Demo 8.1
+1. In-Class Exercise 8.1
+
+---
+
+### Announcements
+
+1. Problem Set 3 is posted and will be due [November 13].
+1. Project Milestone 2 will be due [November 20].
+
+---
+
+### Midterm Grades
+
+* The overall course grades will be curved as described in the syllabus
+* If you have any concerns or want to brainstorm study methods, please do reach out
+
+.center[
+  <img src="figures/midterm.png" width=800/>
+]
+
+---
+
+### Beautiful Visualization
+
+Isodemographic Cartograms:[https://go.wisc.edu/27h93z](https://go.wisc.edu/27h93z)
+
+.center[
+  <img src="figures/loir-et-cher.png" width=650/>
+]
+
+---
+
+### Exercise Review
+
+You can check out your peers' responses [here](https://go.wisc.edu/06sb3b). I
+like that the questions and answers,
+
+* Highlighted familiarity with diverse visual encodings
+* Demonstrated care about the kinds of challenges that can arise in
+spatiotemporal contexts
+
+---
+
+### In-Class Demo
+
+Before we work through the in-class demo, I would like you and your teammates to
+discuss the following prompt,
+
+> How would you explain a D3 line generators to someone who is familiar with R
+but not D3? Are there any metaphors or related concepts you would use? Can you
+think of a minimal example?
+
+---
+
+### In-Class Demo
+
+* We will work through [Air Pollution TimeSearcher] today and Wednesday
+
+* [Link]
+
+---
+
+### In-Class Exercise
+
+* Work through the Concept Map exercise (just like In-Class Exercise 1.2)
+* Instead of choosing one week, I recommend choosing between either temporal or
+spatial visualization, but including concepts from both weeks 7 and 8.
+* I encourage you to share your solutions at this Piazza Note: [https://go.wisc.edu/f49s55](https://go.wisc.edu/f49s55)
+
+Prepare a concept map to summarize the last week of reading material. An
+effective submission will include a thorough coverage of both abstract concepts
+and practical examples, summarized concisely into short phrases. It will also
+include well-justified links between nodes, with text explanations for edges
+whose interpretation might not be obvious at first.
+
+---
+
+### November 2, 2023
+
+1. In-Class Demo 8.2 
+1. In-Class Exercise 8.2
+
+---
+
+### Announcements
+
+1. Problem Set 3 is posted and will be due [November 13].
+1. Project Milestone 2 will be due [November 20].
+
+---
+
+### Exercise Review
+
+1. You can (still!) share / view example concept maps at the [Piazza link](https://go.wisc.edu/f49s55)
+1. The concept maps included useful ways of organizing topics from the course,
+  * *Data formats and processing*, like geographic formats and `lubridate` for date parsing
+  * Explanations of the most *common queries* in the spatiotemporal context
+  * Lists of alternative *visual encodings*
+  * Summaries of *useful functions*, like `tmap_shape`, `d3.line`, and `d3.geoPath`
+
+---
+
+### In-Class Demo
+
+* We will continue to work through [Air Pollution TimeSearcher]
+
+* We'll start at `demo8-2-starter.js` [Link]
+
+---
+
+### In-Class Exercise
+
+In your project teams, work through [Milestone Reflection] in the exercise
+sheet. Share at least two of your team's strategies at
+[https://go.wisc.edu/typf30](https://go.wisc.edu/typf30)
