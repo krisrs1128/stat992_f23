@@ -1707,10 +1707,10 @@ what is commonly encountered and see how they would address it.
 
 ### Beautiful Visualization
 
-Isodemographic Cartograms:[https://go.wisc.edu/27h93z](https://go.wisc.edu/27h93z)
+Isodemographic Cartograms: [https://go.wisc.edu/27h93z](https://go.wisc.edu/27h93z)
 
 .center[
-  <img src="figures/loir-et-cher.png" width=650/>
+  <img src="figures/loir-et-cher.png" width=450/>
 ]
 
 ---
