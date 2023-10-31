@@ -1741,7 +1741,8 @@ think of a minimal example?
 
 * We will work through [Air Pollution TimeSearcher] today and Wednesday
 
-* [Link]
+* Code: [https://go.wisc.edu/f31pb0](https://go.wisc.edu/f31pb0)
+* Whiteboard: [https://go.wisc.edu/ty7dc0](https://go.wisc.edu/ty7dc0)
 
 ---
 
