@@ -87,33 +87,21 @@ function check_any(d, scales, window) {
 
 function check_all(d, scales) {
   // loop over the brushes
-    // select the current brush
-    // check whether the series goes through the current brush
+  // select the current brush
+  // check whether the series goes through the current brush
   // if series went through all brushes, return true
 }
 
-function new_brush(brush_fun) {
-  let brush = d3.brush()
-    .on("brush", brush_fun)
-    .on("end", brushend);
-
-  brushes.push(brush)
-
+function new_brush() {
+  // define the d3 brush object
   // insert a new g element to contain the brush
-
   // call the newest brush on the appended element
 
   function brushend(ev) {
     // check whether the last brush we had inserted was used to create a selection
     // if so, append a new brush
   }
-
   // remove pointer events from the overlay except for the most recent brush
-  for (let i = 0; i < brushes.length; i++) {
-    d3.select(`#brush-${i}`)
-      .selectAll(".overlay")
-      .style("pointer-events", i < brushes.length - 1 ? "none" : "all");
-  }
 }
 
 d3.csv("pollution.csv", d3.autoType)
