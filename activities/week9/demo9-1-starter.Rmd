@@ -12,8 +12,8 @@ theme_set(theme_bw())
 ```
 
 ```{r}
-nodes <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/climate-nodes.csv")
-edges <- read_csv("https://raw.githubusercontent.com/krisrs1128/stat479_s22/main/_slides/week8/exercises/data/climate-edges.csv")
+nodes <- read_csv("https://github.com/krisrs1128/stat992_f23/raw/main/activities/week9/climate-nodes.csv")
+edges <- read_csv("https://github.com/krisrs1128/stat992_f23/raw/main/activities/week9/climate-edges.csv")
 ```
 
 When starting, use only the first 500 nodes.
