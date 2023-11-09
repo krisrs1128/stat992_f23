@@ -1892,14 +1892,88 @@ anything you would like to go over.
 
 ### November 9, 2023
 
-1. Problem Set 3 is posted and will be due [November 13].
-1. Project Milestone 2 will be due [November 20].
+1. Review Discussion 9.1
+1. Demo 9.2
+1. In-Class Exercise 9.2
 ---
 
 ### Announcements
 
 1. Problem Set 3 will be due [November 13].
 1. Project Milestone 2 will be due [November 20].
+
+---
+
+### Beautiful Visualizations
+
+[Visual Complexity](http://www.visualcomplexity.com/vc/index.cfm?all=yes) is a
+project that curated 1000 network visualizations.
+
+.center[
+&lt;img src="figures/visual-complexity.png" width=600/&gt;
+]
+
+---
+
+### Discussion 9.1
+
+What's going on in the `new_brush()` function from Demo 8.2?
+
+[https://go.wisc.edu/rgclje](https://go.wisc.edu/rgclje)
+
+---
+
+1. Create a new brush object and add it to the collection.
+1. Refer to functions to run every time the brush is moved/finished.
+
+
+```r
+let brush = d3.brush()
+  .on("brush", brush_fun)
+  .on("end", brushend);
+
+brushes.push(brush)
+```
+
+---
+
+Attach the newest brush SVG elements (several rectangles that register mouse
+interactions) to an existing group on the HTML page.
+
+
+```r
+d3.select(`#brush-${brushes.length - 1}`).call(brushes[brushes.length - 1])
+```
+
+---
+
+1. Check whether the latest brush has been used or not.
+1. If it was used, then add a new one invisibly to the background. Otherwise,
+there's no need -- the previous brush is still invisible in the background.
+
+
+
+```r
+function brushend(ev) {
+  let last_brush = d3.select(`#brush-${brushes.length - 1}`)
+  let selection = d3.brushSelection(last_brush.node())
+  if (selection) new_brush(brush_fun);
+}
+```
+
+---
+
+Make sure that the "full visualization" overlay window refers to the invisible
+brush.
+
+
+```r
+for (let i = 0; i &lt; brushes.length; i++) {
+  d3.select(`#brush-${i}`)
+    .selectAll(".overlay")
+    .style("pointer-events", i &lt; brushes.length - 1 ? "none" : "all");
+}
+```
 
 ---
 
