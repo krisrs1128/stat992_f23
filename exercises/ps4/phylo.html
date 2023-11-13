@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+    <link rel="stylesheet" href="phylo.css">
+  </head>
+  <body>
+    <select id="country_select" multiple/>
+      <option>China</option>
+      <option>UnitedStates</option>
+      <option>Netherlands</option>
+      <option>Australia</option>
+      <option>UnitedKingdom</option>
+      <option>Singapore</option>
+      <option>Switzerland</option>
+      <option>Korea</option>
+      <option>Japan</option>
+    </select>
+    <svg height=500 width=900>
+      <g id ="tree"/>
+      <g id="labels">
+        <text/>
+      </g>
+    </svg>
+  </body>
+  <script src="phylo.js"></script>
+</html>

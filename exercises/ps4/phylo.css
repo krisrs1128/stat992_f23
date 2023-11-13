@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&family=Open+Sans&display=swap');
+
+#tree path {
+  fill: none;
+}
+
+#labels text {
+  font-family: 'Open Sans';
+  font-size: 12;
+}
