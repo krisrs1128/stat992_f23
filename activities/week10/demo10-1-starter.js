@@ -36,7 +36,7 @@ function visualize(data) {
     .attrs({
       cx: d => d.x,
       cy: d => d.y,
-      r: d => 10 * Math.exp(-.5 * d.depth), // decreasing sizes
+      r: d => radius(d.depth), // decreasing sizes
       transform: "translate(0, 10)",
       fill: "#A0C3D9",
     })

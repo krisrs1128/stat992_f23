@@ -2010,7 +2010,7 @@ We will implement the interactive version of the Flare Tree visualization from
 the Week 9 - 3 notes.
 
 * Whiteboard: [https://go.wisc.edu/kb1036](https://go.wisc.edu/kb1036)
-* Code: []()
+* Code: [https://go.wisc.edu/w60rd6](https://go.wisc.edu/w60rd6)
 
 ---
 
