@@ -1992,8 +1992,6 @@ the next lecture).
 
 ### Code Demo [10.1]
 
-[Link]
-
 With those who are sitting at your table, provide a two-sentence description of
 for one of the following two functions,
 
@@ -2008,18 +2006,21 @@ practical application.
 
 ### Code Demo [10.1]
 
-* We will implement the interactive version of the Flare Tree visualization from
+We will implement the interactive version of the Flare Tree visualization from
 the Week 9 - 3 notes.
 
-* [Link]
+* Whiteboard: [https://go.wisc.edu/kb1036](https://go.wisc.edu/kb1036)
+* Code: []()
 
-<iframe src="https://krisrs1128.github.io/stat679_code/examples/week9/week9-1/flare3.html" data-external="1" width=800 height=350></iframe>
+---
+
+<iframe src="https://krisrs1128.github.io/stat679_code/examples/week9/week9-1/flare3.html" data-external="1" width=900 height=450></iframe>
 
 ---
 
 ### Discussion [10.1]
 
-Document: https://go.wisc.edu/h43i0k
+Document: https://go.wisc.edu/4p3gpq
 
 Here are four thoughtfully designed network and tree visualizations data that
 attracted a bit of attention in the data science blogosphere.
