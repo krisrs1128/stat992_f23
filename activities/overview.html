@@ -2090,6 +2090,170 @@ team.
 * Include a screenshot of the original visualization for reference.
 
 ---
+
+### November 21, 2023
+
+1. Exercise Review
+1. In-Class Demo 11.1
+1. Discussion 11.1
+
+---
+
+### Announcements
+
+1. Project Milestone 3 is due [November 20]
+1. Project Peer Reviews are due [December 4]
+1. Problem Set 4 is due [December 4]
+1. Project Presentations will be held [December 12]
+1. A Project Milestone Accountability Form is posted, if you would like to share
+comments about your team with the teaching staff (No Due Date)
+
+---
+
+### Exercise Review
+
+Let's revisit some of the questions from Exercise 9.2. Most related to some
+aspect of the tree/graph data structures that were not very transparent.
+
+1. `ggraph` includes many built-in functions whose purpose is not obvious from
+context alone.
+1. D3 does many layout calculations for both tree and graph data, even before
+any data are displayed on the screen.
+
+---
+
+### Exercise Review
+
+Distinct in `tidygraph` will work like distinct in `tidyverse`: It finds the
+unique values of a feature.
+
+
+```r
+G  %&gt;%
+  distinct(genre) ## ???
+```
+
+By default, `tidygraph` assumes graph edges or directed, so we need to override
+this default if it's not true. `group_louvain()` is a function that assigns each
+node to a cluster using the Louvain graph clustering algorithm.
+
+
+```r
+G %&gt;%
+  to_undirected() %&gt;% #???
+  mutate(cluster = group_louvain()) #???
+```
+
+---
+
+### Exercise Review
+
+The graph object is a list of two data.frames, representing nodes and edges,
+respectively. By default, `mutate` will modify the node data.frame. `pull`
+converts a data.frame column into an ordinary vector.
+
+
+```r
+climate_graph &lt;- tbl_graph(nodes, edges) |&gt;
+  mutate(
+    session_grouped = fct_lump_n(session, 6),
+    genre_grouped = fct_lump_n(genre, 6)
+  )
+
+climate_graph |&gt;
+  distinct(session_grouped) |&gt;
+  pull(session_grouped)
+```
+
+---
+
+### Exercise Review
+
+`create_ring` and `create_bipartite` are helpers that create toy graph datasets
+from scratch without referring to any real data.
+
+
+```r
+G1 &lt;- create_ring(10)  %N&gt;% # ???
+  mutate(id = LETTERS[1:n()])
+G2 &lt;- create_bipartite(4, 2) %&gt;% # ???
+  mutate(id = LETTERS[1:n()])
+```
+
+---
+
+### Exercise Review
+
+For stratification of tree data in D3, there must be exactly one node which has
+no parents. This is indicated by an object with `from: null`, and we often have
+to add this node manually.
+
+
+```r
+data["edges"].push({to: "flare", from: null});//???
+```
+
+---
+
+### Exercise Review
+
+What exactly does `.tick()` do in D3 simulations?
+ 
+[https://observablehq.com/@ben-tanen/a-tutorial-to-using-d3-force-from-someone-who-just-learned-ho](Excellent Tutorial)
+
+
+```r
+// 2. create new force simulation specifying the forces to use
+//    and, in our case, how many "ticks" or frames we'll want to simulate
+sim = d3.forceSimulation(nodes)
+  .force("force_name", ...)
+  // ... chain together as many forces as we want
+  .stop()
+  .tick(n_frames_to_simulate)
+```
+
+---
+
+### Exercise Review
+
+
+```r
+// 4. indicate how we should update the graph for each tick
+sim.on("tick", () =&gt; {
+  // ... specify how we should move nodes/edges given new positional data
+})
+```
+
+---
+
+### Beautiful Visualizations
+
+.pull-left[
+We have finished the Networks / Trees module and are moving onto the
+High-Dimensional / Text data module. Let's look at an example PCA from
+"Visualizing the Geometry of BERT Embeddings."
+]
+
+.pull-right[
+  &lt;img src="figures/parse-tree.png" width=500/&gt;
+]
+
+---
+
+### In-Class Demo
+
+* We will work through [Single Cell Genomics] and [Interactive Single Cell Genomics]
+
+* Whiteboard: [https://go.wisc.edu/02k76d](https://go.wisc.edu/02k76d)
+* Code: []()
+
+---
+
+### Discussion
+
+* With your team, work through [How to (Mis)Read UMAP] in the exercise sheet.
+
+* Copy your answers to this page: https://go.wisc.edu/2210gn
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
