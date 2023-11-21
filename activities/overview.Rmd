@@ -2063,3 +2063,36 @@ team.
 * Include a screenshot of the original visualization for reference.
 
 ---
+
+### November 21, 2023
+
+1. In-Class Demo 11.1
+1. Discussion 11.1
+
+---
+
+### Announcements
+
+1. Project Milestone 2 is due _
+1. The Project Peer Review assignment has been posted (Due _)
+1. Problem Set 4 has been posted (Due _)
+1. A Project Milestone Accountability Form is posted, if you would like to share
+comments about your team with the teaching staff (No Due Date)
+1. We have finished the Networks / Trees module and are moving onto the
+High-Dimensional / Text data module.
+
+---
+
+### In-Class Demo
+
+* We will work through [Single Cell Genomics] and [Interactive Single Cell Genomics]
+
+* [Link]
+
+---
+
+### Discussion
+
+* With your team, work through [How to (Mis)Read UMAP] in the exercise sheet.
+
+* Copy your answers to this page: https://go.wisc.edu/2210gn
