@@ -2074,7 +2074,6 @@ team.
 
 ### Announcements
 
-1. Project Milestone 3 is due [November 20]
 1. Project Peer Reviews are due [December 4]
 1. Problem Set 4 is due [December 4]
 1. Project Presentations will be held [December 12]
@@ -2221,3 +2220,95 @@ High-Dimensional / Text data module. Let's look at an example PCA from
 * With your team, work through [How to (Mis)Read UMAP] in the exercise sheet.
 
 * Copy your answers to this page: https://go.wisc.edu/2210gn
+
+---
+
+### November 28, 2023
+
+1. In-Class Demo 12.1
+1. In-Class Exercise 12.1
+
+---
+
+### Announcements
+
+1. Project Milestone 2 grading will take until next Monday.
+1. Project Peer Reviews are due [December 4]
+1. Problem Set 4 is due [December 4]
+1. Project Presentations will be held [December 12]
+1. Project Milestone 3 is due [December 13]
+
+---
+
+### Beautiful Visualizations
+
+Figure from [*Genes mirror geography within Europe*](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2735096/).
+
+.center[
+<img src="figures/nihms132060f1.jpg" width=500/>
+]
+
+---
+
+### In-Class Demo
+
+* We will work through [Living Wages] in the exercise sheet.
+
+* [Code]: [https://go.wisc.edu/a18ij6](https://go.wisc.edu/a18ij6)
+* [Whiteboard]: [https://go.wisc.edu/gz8yo4](https://go.wisc.edu/gz8yo4)
+
+---
+
+### In-Class Exercise
+
+Work through [Code Analysis] in the exercises sheet (also copied below). You can
+pick examples from before this week if you want.
+
+[Code Analysis] Pick one code example from the lecture notes. Provide a 3 - 4
+sentence summary of the overall implementation strategy. Then, add comments
+every 10 - 15 lines describing what each section of code is doing. If there are
+parts that you do not understand, add a ??? next to it (we will review these in
+the next lecture).
+
+---
+
+### November 30, 2023
+
+1. In-Class Demo [12.2]
+1. In-Class Discussion [12.2]
+
+---
+
+### Announcements
+
+
+1. Project Peer Reviews are due [December 4]
+1. Problem Set 4 is due [December 4]
+1. Project Milestone 3 is due [December 13]
+1. Project Presentations will be held [December 12]
+  * Each team has 9 minutes to present. 
+  * The team order is in the updated project description.
+  * Send me your slides by 7am that day.
+
+---
+
+### Exercise Review
+
+---
+
+### In-Class Demo
+
+* We will work through [Hotel Reviews] in the exercise sheet.
+
+* [Link]
+
+---
+
+### In-Class Discussion
+
+* With your team, work through either [Interpreting UMAP] or [Interpreting Topic
+Models] in the exercise sheet.
+
+* Add your answers to this document: https://go.wisc.edu/wy024u
+
+---
