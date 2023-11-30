@@ -286,7 +286,7 @@ ggplot(penguins) +
   geom_point(aes(bill_length_mm, bill_depth_mm, col = species, shape = island))
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-8-1.png" width="600" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-3-1.png" width="600" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -302,7 +302,7 @@ ggplot(penguins) +
   )
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-9-1.png" width="550" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-4-1.png" width="550" style="display: block; margin: auto;" /&gt;
 ---
 
 
@@ -317,7 +317,7 @@ ggplot(penguins) +
   )
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-10-1.png" width="550" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-5-1.png" width="550" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -330,7 +330,7 @@ ggplot(penguins) +
   facet_wrap(~ island)
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-11-1.png" width="1000" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-6-1.png" width="1000" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -349,7 +349,7 @@ ggplot(penguins) +
   )
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-12-1.png" width="800" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-7-1.png" width="800" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -370,7 +370,7 @@ ggplot(penguins, aes(bill_length_mm, bill_depth_mm)) +
   )
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-13-1.png" width="320" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-8-1.png" width="320" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -391,7 +391,7 @@ ggplot(penguins, aes(bill_length_mm, bill_depth_mm)) +
   )
 ```
 
-&lt;img src="overview_files/figure-html/unnamed-chunk-14-1.png" width="650" style="display: block; margin: auto;" /&gt;
+&lt;img src="overview_files/figure-html/unnamed-chunk-9-1.png" width="650" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -2307,6 +2307,7 @@ the next lecture).
 
 ### November 30, 2023
 
+1. Exercise Review [12.1]
 1. In-Class Demo [12.2]
 1. In-Class Discussion [12.2]
 
@@ -2327,13 +2328,96 @@ the next lecture).
 
 ### Exercise Review
 
+Two main sources of confusion:
+
+1. Preprocessing steps in PCA and topic models.
+1. For topic models, what exactly is discrepancy? How is it calculated?
+
+---
+
+### Exercise Review
+
+`step_normalize()` makes sure that all columns have mean 0 and variance 1. This
+makes sure no high-variance columns dominate the PCA.
+
+
+```r
+pca_rec &lt;- recipe(~., data = living_wages) %&gt;%
+  update_role(state_territory, city, new_role = "id") %&gt;%
+  step_normalize(all_predictors()) %&gt;%#???
+```
+
+We increment the `chapter` column every time we encounter the word "chapter" in
+the `text` column. Unite defines a new column called document.
+
+
+```r
+by_chapter &lt;- books %&gt;%
+  group_by(title) %&gt;%
+  mutate(chapter = cumsum(str_detect(text, regex("chapter", ignore_case = TRUE)))) %&gt;%  #???
+  group_by(title, chapter) %&gt;%
+  filter(n() &gt; 5) %&gt;%
+  ungroup() %&gt;%
+  unite(document, title, chapter)  # ???
+```
+
+---
+
+`discrepancy` tells whether a word has different probabilities across topics.
+
+
+```r
+discriminative_terms &lt;- topics %&gt;%
+  group_by(term) %&gt;%
+  mutate(D = discrepancy(beta)) %&gt;%   ### ???
+```
+
+
+```r
+discrepancy &lt;- function(p, lambda = 1e-7) {
+  p &lt;- (p + lambda) / sum(p + lambda) # Laplace smoothing
+  K &lt;- kl_mat(p)
+  max(K)
+}
+```
+
+---
+
+
+```r
+kl_div &lt;- function(p1, p2) {
+  p1 * log(p1 / p2) + (p2 - p1)
+}
+
+kl_mat &lt;- function(p) {
+  K &lt;- matrix(0, nrow = length(p), ncol = length(p))
+  
+  for (i in seq_along(p)) {
+    for (j in seq_len(i - 1)) {
+      K[i, j] &lt;- kl_div(p[i], p[j])
+    }
+  }
+  K
+}
+```
+
 ---
 
 ### In-Class Demo
 
-* We will work through [Hotel Reviews] in the exercise sheet.
+We will work through [Hotel Reviews] in the exercise sheet.
 
+* Whiteboard: [https://go.wisc.edu/92v2p2](https://go.wisc.edu/92v2p2)
 * [Link]
+
+Warm Up: Lecture notes 12.1 discussed `beta` and `gamma` matrices. How should we
+interpret the rows and columns of these matrices?
+
+
+```r
+topics &lt;- tidy(chapters_lda, matrix = "beta")
+memberships &lt;- tidy(chapters_lda, matrix = "gamma")
+```
 
 ---
 
@@ -2342,9 +2426,7 @@ the next lecture).
 * With your team, work through either [Interpreting UMAP] or [Interpreting Topic
 Models] in the exercise sheet.
 
-* Add your answers to this document: https://go.wisc.edu/wy024u
-
----
+* Add your answers to this document: [go.wisc.edu/c7o194](go.wisc.edu/c7o194)
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

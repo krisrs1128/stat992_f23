@@ -2274,6 +2274,7 @@ the next lecture).
 
 ### November 30, 2023
 
+1. Exercise Review [12.1]
 1. In-Class Demo [12.2]
 1. In-Class Discussion [12.2]
 
@@ -2294,13 +2295,90 @@ the next lecture).
 
 ### Exercise Review
 
+Two main sources of confusion:
+
+1. Preprocessing steps in PCA and topic models.
+1. For topic models, what exactly is discrepancy? How is it calculated?
+
+---
+
+### Exercise Review
+
+`step_normalize()` makes sure that all columns have mean 0 and variance 1. This
+makes sure no high-variance columns dominate the PCA.
+
+```{r, eval = FALSE}
+pca_rec <- recipe(~., data = living_wages) %>%
+  update_role(state_territory, city, new_role = "id") %>%
+  step_normalize(all_predictors()) %>%#???
+```
+
+We increment the `chapter` column every time we encounter the word "chapter" in
+the `text` column. Unite defines a new column called document.
+
+```{r, eval = FALSE}
+by_chapter <- books %>%
+  group_by(title) %>%
+  mutate(chapter = cumsum(str_detect(text, regex("chapter", ignore_case = TRUE)))) %>%  #???
+  group_by(title, chapter) %>%
+  filter(n() > 5) %>%
+  ungroup() %>%
+  unite(document, title, chapter)  # ???
+```
+
+---
+
+`discrepancy` tells whether a word has different probabilities across topics.
+
+```{r, eval = FALSE}
+discriminative_terms <- topics %>%
+  group_by(term) %>%
+  mutate(D = discrepancy(beta)) %>%   ### ???
+```
+
+```{r, eval = FALSE}
+discrepancy <- function(p, lambda = 1e-7) {
+  p <- (p + lambda) / sum(p + lambda) # Laplace smoothing
+  K <- kl_mat(p)
+  max(K)
+}
+```
+
+---
+
+```{r}
+kl_div <- function(p1, p2) {
+  p1 * log(p1 / p2) + (p2 - p1)
+}
+
+kl_mat <- function(p) {
+  K <- matrix(0, nrow = length(p), ncol = length(p))
+  
+  for (i in seq_along(p)) {
+    for (j in seq_len(i - 1)) {
+      K[i, j] <- kl_div(p[i], p[j])
+    }
+  }
+  K
+}
+```
+
 ---
 
 ### In-Class Demo
 
-* We will work through [Hotel Reviews] in the exercise sheet.
+We will work through [Hotel Reviews] in the exercise sheet.
 
+* Whiteboard: [https://go.wisc.edu/92v2p2](https://go.wisc.edu/92v2p2)
 * [Link]
+
+Warm Up: Lecture notes 12.1 discussed `beta` and `gamma` matrices. How should we
+interpret the rows and columns of these matrices?
+
+```{r, eval = FALSE}
+topics <- tidy(chapters_lda, matrix = "beta")
+memberships <- tidy(chapters_lda, matrix = "gamma")
+```
 
 ---
 
@@ -2309,6 +2387,4 @@ the next lecture).
 * With your team, work through either [Interpreting UMAP] or [Interpreting Topic
 Models] in the exercise sheet.
 
-* Add your answers to this document: https://go.wisc.edu/wy024u
-
----
+* Add your answers to this document: [go.wisc.edu/c7o194](go.wisc.edu/c7o194)
