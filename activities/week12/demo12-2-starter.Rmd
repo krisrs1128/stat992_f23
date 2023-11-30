@@ -1,5 +1,5 @@
 ---
-title: "Improving an App"
+title: "Hotel Reviews"
 output: html_document
 ---
 
@@ -20,13 +20,13 @@ a. Transform the raw reviews into a collection of per-review word counts.
 Remove stopwords from across all lexicons in `tidytext::stop_words`.
 
 ```{r}
-reviews <- read_csv("https://github.com/krisrs1128/stat479_s22/blob/main/_slides/week11/exercises/reviews.csv?raw=true") %>%
+reviews <- read_csv("https://github.com/krisrs1128/stat992_f23/raw/main/activities/week12/reviews.csv") |>
   slice_sample(n = 2500)  # using half the data for convenience
 
-reviews_dtm <- reviews %>%
-  unnest_tokens(word, Review) %>%
-  filter(!(word %in% stop_words$word)) %>%
-  count(document, word) %>%
+reviews_dtm <- reviews |>
+  unnest_tokens(word, Review) |>
+  filter(!(word %in% stop_words$word)) |>
+  count(document, word) |>
   cast_dtm(document, word, n)
 ```
 
@@ -50,8 +50,8 @@ reviews with high membership in these topics.
 head(round(fit@gamma, 3))
 ```
 ```{r}
-memberships <- tidy(fit, matrix = "gamma") %>%
-  left_join(reviews %>% mutate(document = as.character(document)))
+memberships <- tidy(fit, matrix = "gamma") |>
+  left_join(reviews |> mutate(document = as.character(document)))
 
 ggplot(memberships) +
   geom_col(aes(gamma, document, col = as.factor(topic))) +
@@ -62,8 +62,8 @@ ggplot(memberships) +
 ```{r}
 hclust_result <- hclust(dist(fit@gamma))
 document_order <- fit@documents[hclust_result$order]
-memberships <- tidy(fit, matrix = "gamma") %>%
-  left_join(reviews %>% mutate(document = as.character(document))) %>%
+memberships <- tidy(fit, matrix = "gamma") |>
+  left_join(reviews |> mutate(document = as.character(document))) |>
   mutate(document = factor(document, levels = document_order))
 
 ggplot(memberships) +
@@ -79,8 +79,8 @@ ggplot(memberships) +
 ```
 
 ```{r}
-memberships %>%
-  filter(topic == 1) %>%
+memberships |>
+  filter(topic == 1) |>
   arrange(-gamma)
 ```
 
@@ -91,9 +91,9 @@ negative vs. positive reviews?
 ```{r}
 topics <- tidy(fit, matrix = "beta")
 
-top_terms <- topics %>%
-  group_by(topic) %>%
-  slice_max(beta, n = 70) %>%
+top_terms <- topics |>
+  group_by(topic) |>
+  slice_max(beta, n = 70) |>
   mutate(term = reorder_within(term, beta, topic))
 ```
 
@@ -104,9 +104,4 @@ ggplot(top_terms) +
   facet_wrap(~ topic, scales = "free") +
   scale_y_reordered()
 ```
-
-
-
-
-
 

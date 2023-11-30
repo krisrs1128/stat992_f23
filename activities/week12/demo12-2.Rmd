@@ -1,5 +1,5 @@
 ---
-title: "Improving an App"
+title: "Hotel Reviews"
 output: html_document
 ---
 
@@ -20,7 +20,7 @@ a. Transform the raw reviews into a collection of per-review word counts.
 Remove stopwords from across all lexicons in `tidytext::stopwords`.
 
 ```{r}
-reviews <- read_csv("https://github.com/krisrs1128/stat479_s22/blob/main/_slides/week11/exercises/reviews.csv?raw=true") %>%
+reviews <- read_csv("https://github.com/krisrs1128/stat992_f23/raw/main/activities/week12/reviews.csv") %>%
   slice_sample(n = 2500)
 
 reviews_dtm <- reviews %>%
