@@ -2370,7 +2370,7 @@ kl_mat <- function(p) {
 We will work through [Hotel Reviews] in the exercise sheet.
 
 * Whiteboard: [https://go.wisc.edu/92v2p2](https://go.wisc.edu/92v2p2)
-* [Link]
+* [Link]: [https://go.wisc.edu/i0c9j8](https://go.wisc.edu/i0c9j8)
 
 Warm Up: Lecture notes 12.1 discussed `beta` and `gamma` matrices. How should we
 interpret the rows and columns of these matrices?
@@ -2388,3 +2388,62 @@ memberships <- tidy(chapters_lda, matrix = "gamma")
 Models] in the exercise sheet.
 
 * Add your answers to this document: [go.wisc.edu/c7o194](go.wisc.edu/c7o194)
+
+---
+
+### December 5, 2023
+
+1. In-Class Demo [13.1]
+1. In-Class Discussion [13.1]
+
+---
+
+### Announcements
+
+1. Project Milestone 3 is due [December 13]
+1. Project Presentations will be held [December 12]
+  * Each team has 9 minutes to present. 
+  * The team order is in the updated project description.
+  * Send me your slides by 7am that day. 
+  * I want people to have a chance to hear about your projects -- invite anyone you think might be interested.
+
+---
+
+### My Talk
+
+I am giving the Stat Seminar (Wednesday 4pm, SMI 133). There will lots of
+visualization.
+
+Code: https://go.wisc.edu/q43ol3
+
+.center[
+<a href="http://localhost:5000">
+<img src="figures/scdesigner-interactive.png" width=700/>
+</a>
+]
+
+---
+
+### In-Class Demo
+
+We will work through [Evolutionary Ecology] in the exercise sheet
+
+* Code: [https://go.wisc.edu/mymrz3](https://go.wisc.edu/mymrz3)
+* Whiteboard: [https://go.wisc.edu/hrlk14](https://go.wisc.edu/hrlk14)
+
+---
+
+### In-Class Discussion
+
+* Work through [Skimming a Paper] in the exercise sheet. Pick one of the papers
+linked in the google doc below.
+
+* Share your team's responses here: [https://go.wisc.edu/w9074r](https://go.wisc.edu/w9074r)
+
+---
+
+### December 7, 2023
+
+1. In-Class Demo [13.2]
+1. Reflection Notes
+1. Reflection Activity
