@@ -2466,6 +2466,8 @@ Whiteboard: [https://go.wisc.edu/1j064x](https://go.wisc.edu/1j064x)
 
 Code: [https://go.wisc.edu/td1wc5](https://go.wisc.edu/td1wc5)
 
+Repository: [https://go.wisc.edu/91t2al](https://go.wisc.edu/91t2al)
+
 ```{bash, eval = FALSE}
 # install npm: https://nodejs.org/en/download/
 npm create svelte@latest svelte-example
